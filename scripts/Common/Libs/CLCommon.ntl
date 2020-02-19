@@ -1,0 +1,408 @@
+Include("Common/libs/CLColorConverter.ntl");
+Include("Common/libs/CLConstants.ntl");
+
+var CLCommon = {
+	Debug: false,
+
+	LoadLibs: function () {
+		var i,
+			libs = [ "CLCollMap", "CLPrototype","CLMove", "CLConstants", "CLColorConverter", "CLTownManager", "CLConfig", 
+				"CLTracker", "CLFile", "CLManager", "CLPrecast", "CLSkill", "CLUnit", "CLDevTools", "CLScript", "CLTown",
+				"CLJson", "CLVoyageTo", "CLItem", "CLAttack", "CLCubing", "CLItemAlias", "CLPickit", "CLRuneword"];
+
+		for (i in libs) {
+			if (typeof libs[i] === "string") {
+				try {
+					Include("Common/libs/" + libs[i] + ".ntl");
+					if (this.Debug) {
+						Print(libs[i] + " " + "has been included successfully");
+					}
+				} catch (includeError) {
+					Print("failed to include " + libs[i] + " library file");
+					CLManager.SendError("failed to include " + libs[i] + " library file");
+					return false;
+				}
+			}
+		}
+
+		switch (me.classid) {
+			case 0:
+				Include("Common/Libs/Char Attacks/CLAmazon.ntl");
+				break;
+			case 1:
+				Include("Common/Libs/Char Attacks/CLSorceress.ntl");
+				break;
+			case 2:
+				Include("Common/Libs/Char Attacks/CLNecromancer.ntl");
+				break;
+			case 3:
+				Include("Common/Libs/Char Attacks/CLPaladin.ntl");
+				break;
+			case 4:
+				Include("Common/Libs/Char Attacks/CLBarbarian.ntl");
+				break;
+			case 5:
+				Include("Common/Libs/Char Attacks/CLDruid.ntl");
+				break;
+			case 6:
+				Include("Common/Libs/Char Attacks/CLAssassin.ntl");
+				break;
+		}
+
+		if (this.Debug) {
+			Print("Lib files have been included successfully");
+		}
+
+		return true;
+	},
+	
+	CloseScreens: function (){
+		if ( GetUIState(0x1A) ) { SetUIState(0x1A, false); } // Cube is open
+		if ( GetUIState(0x19) ) { SetUIState(0x19, false); } // Stash is open	
+		if ( GetUIState(0x0C) ) { SetUIState(0x0C, false); } // Shop open at NPC
+		if ( GetUIState(0x01) ) { SetUIState(0x01, false); } // Inventory open
+		if ( GetUIState(0x02) ) { SetUIState(0x02, false); } // Character Stat screen open
+		if ( GetUIState(0x03) ) { SetUIState(0x03, false); } // Quick skill		
+		if ( GetUIState(0x04) ) { SetUIState(0x04, false); } // Skill		
+		if ( GetUIState(0x05) ) { SetUIState(0x05, false); } // Npc menu
+		if ( GetUIState(0x09) ) { SetUIState(0x09, false); } // Esc menu
+		if ( GetUIState(0x14) ) { SetUIState(0x14, false); } // Waypoint
+		if ( GetUIState(0x21) ) { SetUIState(0x21, false); } // Help
+		if ( GetUIState(0x16) ) { SetUIState(0x16, false); } // Party		
+		//if ( GetUIState(0x0A) ) { SetUIState(0x0A, false); } // Automap is on
+		if ( GetUIState(0x0B) ) { SetUIState(0x0B, false); } // Config controls
+		if ( GetUIState(0x0D) ) { SetUIState(0x0D, false); } // Alt show items
+		if ( GetUIState(0x0E) ) { SetUIState(0x0E, false); } // Submit item
+		if ( GetUIState(0x0F) ) { SetUIState(0x0F, false); } // Quest
+		if ( GetUIState(0x11) ) { SetUIState(0x11, false); } // Questlog button
+		if ( GetUIState(0x12) ) { SetUIState(0x12, false); } // Status area
+		if ( GetUIState(0x15) ) { SetUIState(0x15, false); } // Mini panel
+		if ( GetUIState(0x17) ) { SetUIState(0x17, false); } // Trade Prompt up [ok/cancel] (player) or in Trade w/player
+		if ( GetUIState(0x18) ) { SetUIState(0x18, false); } // msgs			
+		if ( GetUIState(0x1F) ) { SetUIState(0x1F, false); } // Belt show all is toggled
+		if ( GetUIState(0x24) ) { SetUIState(0x24, false); } // Merc screen
+		if ( GetUIState(0x25) ) { SetUIState(0x25, false); } // scroll of whatever
+	},
+
+	Delay: function (amount, random) {
+		if (arguments.length < 2) {
+			Delay(amount);
+		} else {
+			Delay(amount+Random(0, random));
+		}
+	},
+
+	PingDelay: function (amount) {
+		me.ping; // wait for server response
+		Delay(amount);// added delay
+	},
+	
+	InTown: function (who) {
+		if (arguments.length < 1) {
+			who = me;
+		}
+
+		while (who.areaid === 0) {
+			Delay(NTC_DELAY_FRAME);
+		}
+
+		switch (who.areaid) {
+			case 1:
+			case 40:
+			case 75:
+			case 103:
+			case 109:
+				return true;
+		}
+
+		return false;
+	},
+
+	DoClick: function (button, shift, x, y) {
+		if (arguments.length < 2) {
+			return false;
+		}
+
+		if (button !== NTC_CLICK_LDOWN) {
+			button = NTC_CLICK_RDOWN;
+		}
+
+		switch (arguments.length) {
+			case 2:
+				ClickMap(button, shift, me.x, me.y);
+				break;
+			case 3:
+				if (!ClickMap(button, shift, x)) {
+					return false;
+				}
+				break;
+			default:
+				ClickMap(button, shift, x, y);
+				break;
+		}
+
+		Delay(200);
+		ClickMap(button + 2, NTC_SHIFT_NONE, null);
+		return true;
+	},
+
+	SwapWeapons: function (tab) {
+		if (me.weaponstab !== tab) {
+			me.SwapWeapons(0);
+		}
+
+		Delay(100);
+
+		if (me.weaponstab === tab) {
+			return true;
+		}
+
+		return false;
+	},
+
+	GetBeltSize: function () {
+		var i,
+			_items = me.GetItems();
+
+		if (!_items) {
+			return 1;
+		}
+
+		for (i = 0 ; i < _items.length ; i += 1) {
+			
+			if(_items[i].mode == 1 && _items[i].bodyloc == 8) {
+				switch (_items[i].classid) {
+					case 344:
+					case 345: 
+						return 2;
+					case 346:
+					case 347:
+						return 3;			
+					default:
+						return 4;
+				}
+			}			
+		}
+
+		return 1;
+	},
+	
+	OpenChest: function (chest){
+		var i;
+
+		if (!chest) {
+			return false;
+		}
+
+		if (chest.mode > 0) {
+			return false;
+		}
+
+		for (i = 0; i < 20; i += 1) {
+			if ((i % 10) === 0) {
+				if (GetDistance(me, chest) > 2) {
+					CLMove.To(chest.areaid, chest.x+1, chest.y);
+				}
+
+				CLCommon.DoClick(NTC_CLICK_LDOWN, NTC_SHIFT_NONE, chest);
+			}
+
+			Delay(200);
+
+			if (chest.mode > 0) {
+				return true;
+			}
+		}
+
+		return false;
+	},
+
+	TimeStamp: function () {
+		var tick, hr, min, sec, chk, time;
+
+		tick = new Date();
+		hr = tick.getHours();
+		min = tick.getMinutes();
+		sec = tick.getSeconds();
+
+		if (hr < 12){ chk = "AM"; }
+		if (hr > 11){ chk = "PM"; }
+		if (hr > 12){ hr = hr - 12; }
+		if (hr == 0){ hr = 12; }
+		if (hr < 10){ hr = "0" + hr; }
+		if (min < 10){ min = "0" + min; }
+		if (sec < 10){ sec = "0" + sec; }
+
+		time = hr + ":" + min + ":" + sec + " " + chk;
+		return time;
+	},
+	
+	RemoveLag: function (target, delay, count){
+		if (arguments.length < 2) delay = 700;
+		if (arguments.length < 3) count = 0;
+
+		CLMove.To(me.areaid, me.x + Random(-10, 10), me.y + Random(-10, 10));
+
+		me.Cancel(0);
+		Delay(delay);
+
+		if (GetUIState(0x09)) {
+			this.DoClick(NTC_CLICK_LDOWN, NTC_SHIFT_NONE, target || me);
+		}
+
+		Delay(delay);
+
+		me.Cancel(1);
+	},
+	
+	MyGold: function (){
+		return me.GetStat(14) + me.GetStat(15);
+	},
+
+	GetMerc: function (){
+		var merc = me.GetMerc();
+
+		if(merc){
+			if(merc.hp > 0 && merc.mode !== 0 && merc.mode !== 12)
+				return merc;
+		}
+
+		return null;
+	},
+
+	RangedNormal: function () {
+		var i, weapon;
+
+		weapon = me.GetItems();
+
+		if (weapon) {
+			for (i = 0; i < weapon.length; i += 1) {
+				if (weapon[i].mode === 1 && (weapon[i].itemloc === 4 || weapon[i].itemloc === 5)) {
+					switch (weapon[i].classid) {
+							//Bows
+						case 68:
+							//Short Bow
+						case 69:
+							//Hunter's Bow
+						case 70:
+							//Longbow
+						case 71:
+							//Composite Bow
+						case 72:
+							//Short Battle Bow
+						case 73:
+							//Long Battle Bow
+						case 74:
+							//short war bow
+						case 75:
+							//Long War Bow
+						case 161:
+							//Edge Bow
+						case 162:
+							//Razor Bow
+						case 163:
+							//Cedar Bow
+						case 164:
+							//Double Bow
+						case 165:
+							//Short Siege Bow
+						case 166:
+							//Large Siege Bow
+						case 167:
+							//Rune Bow
+						case 168:
+							//Gothic Bow
+						case 264:
+							//Spider Bow
+						case 265:
+							//Blade Bow
+						case 266:
+							//Shadow Bow
+						case 267:
+							//Great Bow
+						case 268:
+							//Diamond Bow
+						case 269:
+							//Crusader Bow
+						case 270:
+							//Ward Bow
+						case 271:
+							//Hydra Bow
+						case 281:
+							//Stag Bow
+						case 282:
+							//Reflex Bow
+						case 291:
+							//Ashwood Bow
+						case 292:
+							//Cermonial Bow
+						case 301:
+							//Matriarchal Bow
+						case 302:
+							//Grand Matron Bow
+							//CrossBows
+						case 76:
+							//Light Crossbow
+						case 77:
+							//Crossbow
+						case 78:
+							//Heavy Crossbow
+						case 79:
+							//Repeating Crossbow
+						case 169:
+							//Arbalest
+						case 170:
+							//Siege Crossbow
+						case 171:
+							//Ballista
+						case 172:
+							//Chu-Ko-Nu
+						case 272:
+							//Pellet Bow
+						case 273:
+							//Gorgon Crossbow
+						case 274:
+							//Colossus Crossbow
+						case 275:
+							//Demon Crossbow
+							return true;
+
+						default:
+							return false;
+					}
+				}
+			}
+		}
+		return false;
+	},
+
+	CheckOwner: function (object, ownername) {
+		var owner;
+
+		if (!object) {
+			return false;
+		}
+
+		owner = object.GetParent();
+
+		//for (var i in owner) {
+			//Print(i + " = " + owner[i]);
+		//}
+
+		if (!owner) {
+			return false;
+		}
+
+		if(ownername === undefined){
+			if (owner === me.name || owner.name === me.name) {
+				return true;
+			}
+		} else {
+			if (owner === ownername || owner.name === ownername) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+};

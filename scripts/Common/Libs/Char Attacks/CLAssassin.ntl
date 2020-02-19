@@ -1,0 +1,308 @@
+var CLToon = {
+	Attack: function (target, firstorder) {
+		return this.AttackInt(target, firstorder);
+	},
+
+	AttackInt: function (target, firstorder) {
+		var pos, primaryindex, attackIndex,
+			skillCasted = 0;
+
+		//if ((CLTMGR_CheckCurse(CLConfig.CheckSelfSafe, CLConfig.CheckMercSafe, true)) || (me.hp <= parseInt(me.hpmax * CLConfig.TPChicken,10) / 100)) {
+			//if (!CLTMGR_VisitTown()) { return 0; }
+		//}
+		//_merc = CLC_GetMerc();
+		//if(_merc){
+			//if ((CLTMGR_CheckCurse(CLConfig.CheckSelfSafe, CLConfig.CheckMercSafe, true)) || (_merc.hp <= parseInt(_merc.hpmax * CLConfig.MercTPChicken,10) / 100)) {
+				//if (!CLTMGR_VisitTown()) { return 0; }
+			//}
+		//}
+
+		//Check if we have needed arrows or bolts
+		if (Ranged) {
+			CLAttack.HaveArrows();
+		}
+
+		if (firstorder && CLConfig.AttackSkill[0] > -1 && CLAttack.GetResistance(target, SkillDamage[0]) < 100) {
+			if (GetDistance(me, target) > SkillRange[0] || !CheckCollision(me, target, 4)) {
+				pos = me.GetOptimalAttackPos(target.areaid, target.x, target.y, SkillRange[0], 4);
+
+				if (pos) {
+					CLMove.To(target.areaid, pos[0], pos[1]);
+				}
+			}
+
+			if (!CLSkill.Cast(CLConfig.AttackSkill[0], SkillHand[0], target)) {
+				return 2;
+			}
+
+			return 3;
+		}
+
+		if (CLConfig.UseTraps) {
+			this.CheckTraps(target);
+		}
+
+		primaryindex = (target.spectype & 0x0A) ? 1 : 3;
+		attackIndex = CLAttack.GetAttackType(target, primaryindex, 91, 81, 81);
+
+		if (CLConfig.AttackSkill[attackIndex] > -1) {
+			skillCasted = attackIndex;
+			if (SkillRange[attackIndex] < 4 && !CheckCollision(target.areaid, target.x, target.y, 1)) {
+				return 1;
+			}
+
+			if (!this.CastSkillInt(attackIndex, target, primaryindex)) {
+				return 2;
+			}
+
+			return 3;
+		}
+
+		if (CLConfig.UseTraps) {
+			if (skillCasted === 0) {
+				Delay(CLConfig.AttackSkill);
+			}
+
+			return 3;
+		}
+
+		return 1;
+	},
+
+	CastSkillInt: function (index, target, primaryIndex) {
+		var i, pos, secondarySkill, castx, casty;
+
+		if ((target.name === "Mephisto" || target.name === "Andariel" || target.name === "Duriel" || target.name === "Diablo" || target.name === "Baal") && CLConfig.AttackSkill[9] > -1) {
+			index = 9;
+		}
+
+		secondarySkill = 0;
+
+		if (CLConfig.AttackSkill[index] === 151) {
+			if (GetDistance(me, target) > SkillRange[index] || !CheckCollision(me, target, 5)) {
+				pos = me.GetOptimalAttackPos(target.areaid, target.x, target.y, SkillRange[index], 5);
+
+				if (pos) {
+					CLMove.To(target.areaid, pos[0], pos[1]);
+				}
+			}
+
+			castx = target.x > me.x ? target.x + 3 : target.x - 3;
+			casty = target.y > me.y ? target.y + 3 : target.y - 3;
+
+			return CLSkill.Cast(CLConfig.AttackSkill[index], SkillHand[index], castx, casty);
+		}
+
+		if (me.GetSkillStatus(CLConfig.AttackSkill[index]) !== 8) {
+			if (GetDistance(me, target) > SkillRange[index] || !CheckCollision(me, target, 4)) {
+				pos = me.GetOptimalAttackPos(target.areaid, target.x, target.y, SkillRange[index], 4);
+
+				if (pos) {
+					CLMove.To(target.areaid, pos[0], pos[1]);
+				}
+			}
+
+			return CLSkill.Cast(CLConfig.AttackSkill[index], SkillHand[index], target);
+		}
+
+		secondarySkill = CLAttack.GetAttackType(target, primaryIndex + 1, 81, 81, 81);
+
+		if (CLConfig.AttackSkill[secondarySkill] > -1) {
+			if (GetDistance(me, target) > SkillRange[secondarySkill] || !CheckCollision(me, target, 4)) {
+				pos = me.GetOptimalAttackPos(target.areaid, target.x, target.y, SkillRange[secondarySkill], 4);
+
+				if (pos) {
+					CLMove.To(target.areaid, pos[0], pos[1]);
+				}
+			}
+
+			return CLSkill.Cast(CLConfig.AttackSkill[secondarySkill], SkillHand[secondarySkill], target);
+		}
+
+		for (i = 0; i < 25; i += 1) {
+			Delay(NTC_Delay_FRAME);
+
+			if (me.GetSkillStatus(CLConfig.AttackSkill[index]) !== 8) {
+				break;
+			}
+		}
+
+		return false;
+	},
+
+	CheckTraps: function (target) {
+		var i, parent, trapOffset, pos,
+			traps = CLUnit.Find(NTC_UNIT_MONSTER),
+			trapcount = 0,
+			isActBoss = false;
+
+		if (target.name === GetLocaleString(3062) || target.name === GetLocaleString(3054) || target.name === GetLocaleString(3060) || target.name === GetLocaleString(3061)) {
+			isActBoss = true;
+		}
+
+		if (traps) {
+			do {
+				if (traps.classid === 412 || traps.classid === 413 || traps.classid === 416 || traps.classid === 417) {
+					if (CLCommon.CheckOwner(traps)) {
+						if (GetDistance(target.x, target.y, traps.x, traps.y) < (isActBoss ? CLConfig.MinBossTrapRange : CLConfig.MinTrapRange) && traps.hp > 100) {
+							trapcount = trapcount + 1;
+						}
+					}
+				}
+
+			} while (traps.GetNext());
+
+			if (trapcount < (isActBoss ? CLConfig.NumBossTrap : CLConfig.NumTraps) && target.hp > 0) {
+				pos = me.GetOptimalAttackPos(target.areaid, target.x, target.y, 13, 10);
+
+				if (pos) {
+					CLMove.To(target.areaid, pos[0], pos[1]);
+				}
+
+				trapOffset = this.GetTrapAttackPattern(isActBoss);
+
+				for (i = 0; i < 5; i += 1) {
+					if (CLConfig.TrapSet[i] > 0) {
+						if (i === 0 || i === 2 || i === 3) { // Added delays to prevent trap miscast
+							Delay(25);
+						}
+
+						CLSkill.Cast((isActBoss ? CLConfig.TrapSet[0] : CLConfig.TrapSet[i]), NTC_HAND_RIGHT, target.x + trapOffset[i][0], target.y + trapOffset[i][1]);
+						if(CLConfig.FastPickit && target.hp <= 0) {
+							break;
+						}				
+					}
+				}
+			}
+
+		}
+	},
+
+	GetTrapAttackPattern: function (isActBoss) {
+		var attackPattern = [],
+			bossOffset = 1;
+
+		switch (CLConfig.TrapAttackPattern.toLowerCase()) {
+			case "pentagram":
+				attackPattern[0] = [-2 - (isActBoss ? bossOffset : 0), -2 - (isActBoss ? bossOffset : 0)];
+				attackPattern[1] = [0, 2 + (isActBoss ? bossOffset : 0)];
+				attackPattern[2] = [2 + (isActBoss ? bossOffset : 0), -2 - (isActBoss ? bossOffset : 0)];
+				attackPattern[3] = [-3 - (isActBoss ? bossOffset : 0), 1 + (isActBoss ? bossOffset : 0)];
+				attackPattern[4] = [3 + (isActBoss ? bossOffset : 0), 1 + (isActBoss ? bossOffset : 0)];
+			break;
+
+			case "horizontal":
+				attackPattern[0] = [0, 0];
+				attackPattern[1] = [1 + (isActBoss ? bossOffset : 0), 0];
+				attackPattern[2] = [-1 - (isActBoss ? bossOffset : 0), 0];
+				attackPattern[3] = [2 + (isActBoss ? bossOffset : 0), 0];
+				attackPattern[4] = [-2 - (isActBoss ? bossOffset : 0), 0];
+			break;
+
+			case "vertical":
+				attackPattern[0] = [0, 0];
+				attackPattern[1] = [0, 1 + (isActBoss ? bossOffset : 0)];
+				attackPattern[2] = [0, -1 - (isActBoss ? bossOffset : 0)];
+				attackPattern[3] = [0, 2 + (isActBoss ? bossOffset : 0)];
+				attackPattern[4] = [0, -2 - (isActBoss ? bossOffset : 0)];
+			break;
+
+			case "quincunx":
+				attackPattern[0] = [2 + (isActBoss ? bossOffset : 0), 2 + (isActBoss ? bossOffset : 0)];
+				attackPattern[1] = [-2 - (isActBoss ? bossOffset : 0), -2 - (isActBoss ? bossOffset : 0)];
+				attackPattern[2] = [-2 - (isActBoss ? bossOffset : 0), 2 + (isActBoss ? bossOffset : 0)];
+				attackPattern[3] = [2 + (isActBoss ? bossOffset : 0), -2 - (isActBoss ? bossOffset : 0)];
+				attackPattern[4] = [0, 0];
+			break;
+		}
+
+		return attackPattern;
+	},
+
+	InitializeAttacks: function () {
+		var i;
+
+		for (i = 0; i < 5; i += 1) {
+			if (CLConfig.TrapSet[i] > 0) {
+				// Find the lowest trap range
+				switch (CLConfig.TrapSet[i]) {
+				case 271:
+					// Lightning Sentry
+				case 276:
+					// Death Sentry	
+					CLConfig.NumTraps += 1;
+					if (25 < CLConfig.MinTrapRange) {
+						CLConfig.MinTrapRange = 25;
+					}
+					break;
+				case 261:
+					// Charged Bolt Sentry
+					CLConfig.NumTraps += 1;
+					if (10 < CLConfig.MinTrapRange) {
+						CLConfig.MinTrapRange = 10;
+					}
+					break;
+				case 262:
+					// Wake of Fire
+					CLConfig.NumTraps += 1;
+					if (25 < CLConfig.MinTrapRange) {
+						CLConfig.MinTrapRange = 25;
+					}
+					break;
+				case 272:
+					// Wake of Inferno
+					CLConfig.NumTraps += 1;
+					if (15 < CLConfig.MinTrapRange) {
+						CLConfig.MinTrapRange = 15;
+					}
+					break;
+				default:
+					// User using invalid trap
+					// Do Nothing
+					break;
+				}
+
+			}
+
+			if (CLConfig.ActBossTrapSet[i] > 0) {
+				// Find the lowest trap range
+				switch (CLConfig.ActBossTrapSet[i]) {
+				case 271:
+					// Lightning Sentry
+				case 276:
+					// Death Sentry
+					CLConfig.NumBossTrap += 1;
+					if (25 < CLConfig.MinBossTrapRange) {
+						CLConfig.MinBossTrapRange = 25;
+					}
+					break;
+				case 261:
+					// Charged Bolt Sentry
+					CLConfig.NumBossTrap += 1;
+					if (10 < CLConfig.MinBossTrapRange) {
+						CLConfig.MinBossTrapRange = 10;
+					}
+					break;
+				case 262:
+					// Wake of Fire
+					CLConfig.NumBossTrap += 1;
+					if (25 < CLConfig.MinBossTrapRange) {
+						CLConfig.MinBossTrapRange = 25;
+					}
+					break;
+				case 272:
+					// Wake of Inferno
+					CLConfig.NumBossTrap += 1;
+					if (15 < CLConfig.MinBossTrapRange) {
+						CLConfig.MinBossTrapRange = 15;
+					}
+					break;
+				default:
+					// User using invalid trap
+					// Do Nothing
+					break;
+				}
+			}
+		}
+	}
+};

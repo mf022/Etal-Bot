@@ -1,0 +1,230 @@
+var CLItem = {
+	ToCursor: function (item) {
+		var i;
+		
+		me.ClickItem(0, item);
+		Delay(200);
+
+		if (me.itemoncursor) {
+			return true;
+		}
+
+		for (i = 0 ; i < 80 ; i += 1) {
+			if ((i % 40) === 0) {
+				me.ClickItem(0, item);
+			}
+
+			Delay(100);
+
+			if (me.itemoncursor) {
+				Delay(200);
+				return true;
+			}
+		}
+
+		return false;		
+	},
+
+	ClearCursor: function () {
+		if (me.itemoncursor) {
+			CLCommon.DoClick(0, 0, me.x, me.y);
+			Delay(NTC_DELAY_FRAME);
+		}
+
+		if (me.itemoncursor) {
+			return false;
+		}
+
+		return true;
+	},
+
+	Shop: function (item, npc, mode) {
+		var i, book,
+			havespace = false,
+			mygold = CLCommon.MyGold();
+
+		if (mode > 1) {
+			if (item.GetItemCost(0, npc.classid) > mygold) {
+				return false;
+			}
+		}
+
+		if (mode > 1) {
+			havespace = false;
+
+			if (item.classid === 529 || item.classid === 530) {
+				book = (item.classid === 530) ? me.GetItems(518) : me.GetItems(519);
+
+				if (!book) {
+					return false;
+				}
+
+				if (book && book[0].GetStat(70) < 20) {
+					havespace = true;
+				}
+			}
+		
+			if (!havespace) {
+				if (CLTown.CheckSpace(item.xsize, item.ysize) || item.classid === 526 || item.classid === 528 || item.itemtype === 9 || (item.itemtype >= 76 && item.itemtype <= 78)) { // potion shop on full inventory fix
+					havespace = true;
+				}
+			}
+		
+			if (havespace) {
+				for (i = 0; i < 40; i += 1) {
+					if ((i % 20) === 0) {
+						me.ClickItem(mode > 2 ? 3 : 1, item);
+					}
+
+					Delay(100);
+
+					if (mygold > CLCommon.MyGold()) {
+						CLCommon.PingDelay(500);
+						return true;
+					}
+				}
+			}
+		} else {
+			if (CLItem.ToCursor(item)) {
+				for (i = 0; i < 40; i += 1) {
+					if ((i % 20) === 0) {
+						me.ClickItem(0, 8, 6, 1);
+					}
+
+					Delay(100);
+
+					if (!me.itemoncursor) {
+						CLCommon.PingDelay(800);
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	},
+
+	Drop: function (item){
+		if (!item) {
+			return false;
+		}
+
+		if (this.ToCursor(item)) {
+			return this.ClearCursor();
+		}
+
+		return false;
+	},
+
+	FieldID: function () {
+		var i, result, location, tome, length,
+			items = CLTown.GetUnidItems(),
+			resultArray = [];
+		
+		if (!items || items.length < 1) {
+			CLTown.ClearInventory();
+			return false;
+		}
+
+		tome = CLTown.GetTome();
+
+		if (!tome || tome.GetStat(70) < items.length) { // no tome or not enough scrolls in it
+			return false;
+		}
+
+		for (i = 0; i < items.length; i += 1) {
+			if (CLPickit.CheckItem(items[i])[0] === -1) {
+				SetUIState(0x01, true);
+				break;
+			}
+		}
+
+		length = items.length;
+
+		for (i = 0; i < length; i = i + 1) {
+			switch (CLPickit.CheckItem(items[i])[0]) {
+				case -1:
+					if (tome) {
+						this.ID(tome, items[i]);
+					}
+					break;
+			}
+		}
+
+		location = GetArea();
+		for (i = length - 1; i > -1; i = i - 1) {
+			// item logger stuff here - location and ethereal
+			resultArray = CLPickit.CheckItem(items[i]);
+			result = resultArray[0];
+
+			switch (result) {
+				case 1:
+					if (items[i].itemflag & 0x10){
+						CLManager.LogItem(COLOR_2 + "Field id Kept: " + items[i].name.split("\n")[0]+ ";" + items[i].itemdesc + COLOR_2 + "\n iLvl: " + items[i].itemlevel + COLOR_2 + "\n Area: " + location.name+ "\n" + COLOR_2 + resultArray[1] + ", " + resultArray[2]);
+					}
+					break;
+				case 2:
+					break;
+				default:
+					if (CLConfig.LogSoldItemQuality !== 0 && items[i].quality >= CLConfig.LogSoldItemQuality) {	
+						CLManager.LogItem(COLOR_1 + "Field id Dropped " + items[i].name.split("\n")[0]+ ";" + items[i].itemdesc + COLOR_2 + "\n iLvl: " + items[i].itemlevel + COLOR_2 + "\n Area: " + location.name);
+					}
+
+					this.Drop(items[i]);
+					break;
+			}
+		}
+
+		CLTown.ClearInventory();
+		me.Cancel(1);
+		return true;
+	},
+
+	Id: function (scroll, uniditem) {
+		var i;
+
+		if (scroll === undefined) {
+			return false;
+		}
+
+		if (uniditem === undefined) {
+			return false;
+		}
+
+		if (uniditem.itemflag & 0x10) {
+			return true;
+		}
+
+		for (i = 0; i < 40; i += 1){
+			if ((i % 20) === 0) {
+				me.ClickItem(1, scroll);
+			}
+
+			Delay(100);
+
+			if (GetCursorType() === 6) {
+				break;
+			}
+		}
+
+		if (i >= 40) {
+			return false;
+		}
+
+		CLCommon.PingDelay(200);
+
+		for (i = 0; i < 40; i += 1) {
+			if ((i % 20) === 0) {
+				me.ClickItem(0, uniditem);
+			}
+
+			Delay(100);
+
+			if (uniditem.itemflag & 0x10) {
+				CLCommon.PingDelay(200);
+				return true;
+			}
+		}
+
+		return false;
+	}
+};

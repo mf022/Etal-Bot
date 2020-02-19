@@ -1,0 +1,30 @@
+var CLUnit = {
+    Find: function (unittype, search, retry) {
+		var i, unit;
+
+		if (unittype === undefined) {
+			return null;
+		}
+
+		if (search === undefined) {
+			search = null;
+		}
+
+		if (retry === undefined) {
+			retry = 3;
+		}
+
+		for (i = 0; i <= retry; i += 1) {
+			unit = GetUnit(unittype, search);
+
+			if (unit) {
+				return unit;
+			}
+
+			if (i < retry) {
+				Delay(200);
+			}
+		}
+		return null;
+	}
+};

@@ -1,0 +1,238 @@
+var CLToon = {
+	DetectAttackPattern: function () {
+		return this.AttackPatternInt();
+	},
+
+	Attack: function (target, firstorder) {
+		return this.AttackInt(target, firstorder);
+	},
+
+	AttackPatternInt: function () {
+		var i, maxindex, maxskill,
+			avgskilllevel = [];
+
+		avgskilllevel[0] = parseInt((me.GetSkill(59, false) + me.GetSkill(39, false) + me.GetSkill(45, false) + me.GetSkill(55, false)) / 4,10);
+		avgskilllevel[1] = parseInt((me.GetSkill(53, false) + me.GetSkill(38, false) + me.GetSkill(48, false) + me.GetSkill(49, false)) / 4,10);
+		avgskilllevel[2] = parseInt((me.GetSkill(47, false) + me.GetSkill(36, false) + me.GetSkill(56, false) + me.GetSkill(64, false)) / 4,10);
+		avgskilllevel[3] = parseInt((me.GetSkill(47, false) + me.GetSkill(36, false) + me.GetSkill(56, false)) / 3,10);
+
+		maxindex = -1;
+		maxskill = 0;
+
+		for (i = 0; i < avgskilllevel.length; i += 1) {
+			if (avgskilllevel[i] > maxskill) {
+				maxindex = i;
+				maxskill = avgskilllevel[i];
+			}
+		}
+
+		switch (maxindex) {
+			case 0:
+				// Blizzard + Glacial Spike
+				CLConfig.AttackSkill[1] = 59;
+				CLConfig.AttackSkill[2] = 55;
+				CLConfig.AttackSkill[3] = 59;
+				CLConfig.AttackSkill[4] = 55;
+				break;
+			case 1:
+				// Chain Lightning + Lightning
+				CLConfig.AttackSkill[1] = 49;
+				CLConfig.AttackSkill[3] = 53;
+				break;
+			case 2:
+				// Fire Ball + Frozen Orb
+				CLConfig.AttackSkill[0] = 64;
+				CLConfig.AttackSkill[1] = 47;
+				CLConfig.AttackSkill[3] = 47;
+				CLConfig.AttackSkill[5] = 64;
+				CLConfig.AttackSkill[6] = 55;
+				break;
+			case 3:
+				// Fire Ball + Meteor
+				CLConfig.AttackSkill[1] = 56;
+				CLConfig.AttackSkill[2] = 47;
+				CLConfig.AttackSkill[3] = 56;
+				CLConfig.AttackSkill[4] = 47;
+				break;
+		}
+
+		return (CLConfig.AttackSkill[1] && CLConfig.AttackSkill[3]);
+	},
+
+	AttackInt: function (target, firstorder) {
+		var pos, primaryindex, attackSkill, caststatic, staticlevel, staticrange, castx, casty;
+
+		//if ((CLTMGR_CheckCurse(CLConfig.CheckSelfSafe, CLConfig.CheckMercSafe, true)) || (me.hp <= parseInt(me.hpmax * CLConfig.TPChicken,10) / 100)) {
+			//if (!CLTMGR_VisitTown()) { return 0; }
+		//}
+		//merc = CLCommon.GetMerc();
+		//if(_merc){
+			//if ((CLTMGR_CheckCurse(CLConfig.CheckSelfSafe, CLConfig.CheckMercSafe, true)) || (_merc.hp <= parseInt(_merc.hpmax * CLConfig.MercTPChicken,10) / 100)) {
+				//if (!CLTMGR_VisitTown()) { return 0; }
+			//}
+		//}
+
+		//Check if we have needed arrows or bolts
+		if(Ranged){
+			CLAttack.HaveArrows();
+		}
+		
+		if (CLSkill.GetLevel(58) && me.GetState(30) === 0) { // check for ES recast
+			CLSkill.Cast(58, NTC_HAND_RIGHT);
+		}
+
+		if (firstorder && CLConfig.AttackSkill[0] > -1 && CLAttack.GetResistance(target, SkillDamage[0]) < 100 && me.GetSkillStatus(CLConfig.AttackSkill[0]) !== 8) {
+			if (GetDistance(me, target) > SkillRange[0] || !CheckCollision(me, target, 4)) {
+				pos = me.GetOptimalAttackPos(target.areaid, target.x, target.y, SkillRange[0], 4);
+
+				if (pos) {
+					CLMove.To(target.areaid, pos[0], pos[1]);
+				}
+			}
+
+			if (!CLSkill.Cast(CLConfig.AttackSkill[0], SkillHand[0], target)) {
+				return 2;
+			}
+
+			return 3;
+		}
+
+		if (CLConfig.Static.indexOf(target.name) !== -1) {
+			caststatic = true;
+		}
+
+		if (caststatic && CLConfig.StaticPercent < 100 && parseInt(target.hp * 100 / target.hpmax) > CLConfig.StaticPercent && CLAttack.GetResistance(target, NTA_DAMAGE_LIGHTNING) <= 80) {
+			staticlevel = CLSkill.GetLevel(42);
+
+			if (staticlevel > 0) {
+				staticrange = Math.floor((5 + staticlevel - 1) * 2 / 3);
+
+				if (GetDistance(me, target) > staticrange || !CheckCollision(me, target, 6)) {
+					pos = me.GetOptimalAttackPos(target.areaid, target.x, target.y, staticrange, 6);
+
+					if (pos) {
+						CLMove.To(target.areaid, pos[0], pos[1]);
+					}
+				}
+
+				if (target.x < me.x) {
+					castx = me.x - 1;
+				} else if (target.x > me.x) {
+					castx = me.x + 1;
+				} else {
+					castx = me.x;
+				}
+
+				if (target.y < me.y) {
+					casty = me.y - 1;
+				} else if (target.y > me.y) {
+					casty = me.y + 1;
+				} else {
+					casty = me.y;
+				}
+
+				if (!CheckCollision(target.areaid, castx, casty, 1)) {
+					castx = me.x;
+					casty = me.y;
+				}
+
+				if (!CLSkill.Cast(42, NTC_HAND_RIGHT, castx, casty)) {
+					return 2;
+				}
+
+				return 3;
+			}
+		}
+
+		primaryindex = (target.spectype & 0x0A) ? 1 : 3;
+
+		attackSkill = CLAttack.GetAttackType(target, primaryindex, 91, 81, 81);
+
+		if (CLConfig.AttackSkill[attackSkill] > -1) {
+			if (!this.CastSkillInt(attackSkill, target, primaryindex)) {
+				return 2;
+			}
+
+			return 3;
+		}
+
+
+		if (CLAttack.GetResistance(target, SkillDamage[primaryindex]) < 100 || (primaryindex === 1 && CLCommon.GetMerc())) {
+			if (!this.CastSkillInt(primaryindex, target, primaryindex)) {
+				return 2;
+			}
+
+			return 3;
+		}
+
+		return 1;
+	},
+
+	CastSkillInt: function (index, target, primaryIndex) {
+		var i, pos, haveCL, havetele,
+			secondarySkill = 0;
+
+		if (target.name === "Baal" && CLConfig.AttackSkill[10] > -1) {
+			index = 10;
+
+			if(CLConfig.AttackSkill[index] === 38) {
+				SkillRange[index] = 2;
+			}
+		}
+			
+		if ((target.name === "Mephisto" || target.name === "Andariel" || target.name === "Duriel" || target.name === "Diablo") && CLConfig.AttackSkill[9] > -1) {
+			index = 9;
+
+			if (CLConfig.AttackSkill[index] === 38) {
+				SkillRange[index] = 2;
+			}		
+		}
+
+		haveCL = CLSkill.GetLevel(53); // check to see if we even have CL
+		havetele = CLSkill.GetLevel(54);
+
+		if (SorcAttack >= 20) {
+			SorcAttack = 0;
+		}
+
+		if (me.GetSkillStatus(CLConfig.AttackSkill[index]) !== 8) {
+			if (GetDistance(me, target) > SkillRange[index] || !CheckCollision(me, target, 4)) {
+				pos = me.GetOptimalAttackPos(target.areaid, target.x, target.y, SkillRange[secondarySkill], 4);
+
+				if (pos) {
+					CLMove.To(target.areaid, pos[0], pos[1]);
+				}
+			}
+
+			if (CLConfig.ChainLightOnLightImmunes && CLAttack.GetResistance(target, NTA_DAMAGE_LIGHTNING) >= 95 && haveCL > 0) {
+				return CLSkill.Cast(53, NTC_HAND_LEFT, target);
+			}
+
+			return CLSkill.Cast(CLConfig.AttackSkill[index], SkillHand[index], target);
+		}
+
+		secondarySkill = CLAttack.GetAttackType(target, primaryIndex + 1, 81, 81, 81);
+
+		if (CLConfig.AttackSkill[secondarySkill] > -1) {
+			if (GetDistance(me, target) > SkillRange[secondarySkill] || !CheckCollision(me, target, 4)) {
+				pos = me.GetOptimalAttackPos(target.areaid, target.x, target.y, SkillRange[secondarySkill], 4, false);
+
+				if (pos) {
+					CLMove.To(target.areaid, pos[0], pos[1]);
+				}
+			}
+
+			return CLSkill.Cast(CLConfig.AttackSkill[secondarySkill], SkillHand[secondarySkill], target);
+		}
+
+		for (i = 0; i < 25; i += 1) {
+			Delay(NTC_DELAY_FRAME);
+
+			if (me.GetSkillStatus(CLConfig.AttackSkill[index]) !== 8) {
+				break;
+			}
+		}
+
+		return false;
+	}
+};

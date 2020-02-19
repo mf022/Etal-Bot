@@ -1,0 +1,317 @@
+var CLTownMove = {
+	Go: function (location) {
+		var x, y, door, unit, fire, wp, fireUnit, roomAct1Town ,roomAct1BloodMoor;
+
+		if (me.act === 1) {
+			wp = GetPresetUnit(1, 2, 119);
+			fireUnit = GetPresetUnit(1, 2, 39);
+
+			if (!fireUnit) {
+				return false;
+			}
+
+			fire = [fireUnit.roomx * 5 + fireUnit.x, fireUnit.roomy * 5 + fireUnit.y];
+
+			switch (location) {
+				case "Stash":
+					this.Walk(1, fire[0] - 7, fire[1] - 12);
+					break;
+				case "Waypoint": 
+					this.Walk(1, wp.roomx * 5 + wp.x, wp.roomy * 5 + wp.y);
+					break;
+				case "Warriv": 
+					this.Walk(1, fire[0] - 5, fire[1] - 2);
+					break;
+				case "Cain": 
+					this.Walk(1, fire[0] + 6, fire[1] - 5);
+					break;
+				case "Kashya": 
+					this.Walk(1, fire[0] + 14, fire[1] - 4);
+					break;
+				case "Charsi": 
+					this.Walk(1, fire[0] - 39, fire[1] - 25);
+					break;
+				case "Akara": 
+					this.Walk(1, fire[0] + 56, fire[1] - 30);
+					break;
+				case "Gheed": 
+					this.Walk(1, fire[0] - 34, fire[1] + 36);
+					break;
+				case "Portalspot": 
+					this.Walk(1, fire[0] + 10, fire[1] + 18);
+					break;
+				case "Exit":
+					roomAct1Town = GetRoom(1);
+					roomAct1BloodMoor = GetRoom(2);
+
+					if (roomAct1Town && roomAct1BloodMoor) {
+						x = roomAct1Town.x - roomAct1BloodMoor.x;
+						y = roomAct1Town.y - roomAct1BloodMoor.y;
+
+						if (x < 0 && y < 0) {// South Exit
+							this.Walk(1, fire[0] + 134, fire[1]);
+						} else if (x > 0 && y < 0) { //North Exit
+							this.Walk(1, fire[0] - 85, fire[1] + 6);
+						} else if (x === 0 && y < 0) { //West Exit
+							this.Walk(1, fire[0] + 13, fire[1] + 75);
+						} else if (x === 0 && y > 0) { //East Exit
+							this.Walk(1, fire[0] + 13, fire[1] - 18);
+						}
+					}
+					break;
+				default: 
+					return false;
+			}
+
+		}
+
+		if (me.act === 2) {
+			switch (location) {
+				case "Fara":
+					this.Walk(40, 5124, 5082);
+					break;
+				case "Cain":
+					this.Walk(40, 5124, 5082);
+					break;
+				case "Lysander":
+					this.Walk(40, 5118, 5104);
+					break;
+				case "Greiz":
+					this.Walk(40, 5033, 5053);
+					break;
+				case "Elzix":
+					this.Walk(40, 5032, 5102);
+					break;
+				case "Palace":
+					this.Walk(40, 5088, 5153);
+					break;
+				case "Sewers":
+					this.Walk(40, 5221, 5181);
+					break;
+				case "Meshif":
+					this.Walk(40, 5205, 5058);
+					break;
+				case "Drognan":
+					this.Walk(40, 5097, 5035);
+					break;
+				case "Atma":
+					this.Walk(40, 5137, 5060);
+					break;
+				case "Warriv":
+					this.Walk(40, 5152, 5201);
+					break;
+				case "Portalspot":
+					this.Walk(40, 5168, 5060);
+					break;
+				case "Stash":
+					this.Walk(40, 5124, 5076);
+					break;
+				case "Waypoint":
+					this.Walk(40, 5070, 5082);
+					break;
+				case "Exit":
+					unit = GetPresetUnits(41, NTC_UNIT_OBJECT);
+
+					if (unit[0].id === 286) {
+						this.Walk(40, me.x, 5000);
+					} else {
+						this.Walk(40, 4977, 5065);
+					}
+					break;
+
+				default:
+					return false;
+			}
+		}
+
+		if (me.act === 3) {
+			switch (location) {
+				case "Meshif":
+					this.Walk(75, 5118, 5168);
+					break;
+				case "Hratli":
+					this.Walk(75, 5127, 5172);
+					break;
+				case "Hratli2":
+					this.Walk(75, 5223, 5048);
+					break;
+				case "Ormus":
+					this.Walk(75, 5129, 5093);
+					break;
+				case "Asheara":
+					this.Walk(75, 5043, 5093);
+					break;
+				case "Alkor":
+					this.Walk(75, 5083, 5016);
+					break;
+				case "Cain":
+					this.Walk(75, 5148, 5066);
+					break;
+				case "Portalspot":
+					this.Walk(75, 5150, 5063);
+					break;
+				case "Stash":
+					this.Walk(75, 5144, 5059);
+					break;
+				case "Waypoint":
+					this.Walk(75, 5158, 5050);
+					break;
+				case "Exit":
+					this.Walk(75, 5145, 4984);
+					break;
+				default:
+					return false;
+			}
+		}
+
+		if (me.act === 4) {
+			switch (location) {
+				case "Halbu":
+					this.Walk(103, 5089, 5031);
+					break;
+				case "Tyrael":
+					this.Walk(103, 5027, 5027);
+					break;
+				case "Jamella":
+					this.Walk(103, 5088, 5054);
+					break;
+				case "Cain":
+					this.Walk(103, 5027, 5027);
+					break;
+				case "Portalspot":
+					this.Walk(103, 5045, 5042);
+					break;
+				case "Stash":
+					this.Walk(103, 5022, 5040);
+					break;
+				case "Waypoint":
+					this.Walk(103, 5043, 5018);
+					break;
+				case "Exit":
+					this.Walk(103, 5190, 5096);
+					break;
+				default:
+					return false;
+			}
+		}
+
+		if (me.act === 5) {
+			switch (location) {
+				case "Cain":
+					this.Walk(109, 5119, 5061);
+					break;
+				case "Larzuk":
+					this.Walk(109, 5141, 5045);
+					break;
+				case "Malah":
+					this.Walk(109, 5078, 5029);
+					break;
+				case "Qual-Kehk":
+					this.Walk(109, 5066, 5083);
+					break;
+				case "Anya":
+					this.Walk(109, 5112, 5120);
+					break;
+				case "Portal":
+					this.Walk(109, 5118, 5120);
+					break;
+				case "Nihlathak":
+					this.Walk(109, 5071, 5111);
+					break;
+				case "Portalspot":
+					this.Walk(109, 5098, 5019);
+					break;
+				case "Stash":
+					this.Walk(109, 5129, 5061);
+					break;
+				case "Waypoint":
+					this.Walk(109, 5113, 5068);
+					break;
+				case "Exit":
+					this.Walk(109, 5026, 5093);
+					door = CLUnit.FindUnit(NTC_UNIT_OBJECT , 449);
+					CLCommon.OpenChest(door);
+					this.Walk(109, 4990, 5090);
+					break;
+				default:
+					return false;
+			}
+		}
+	},
+
+	To: function (x, y) {
+		var i, prex, prey;
+
+		for (i = 0 ; i < 240 ; i += 1) {
+			if ((i % 10) === 0) {
+				if ((i % 120) === 0) {
+					prex = me.x;
+					prey = me.y;
+				}
+
+				ClickMap(NTC_CLICK_LDOWN, NTC_SHIFT_NONE, x, y);
+			}
+
+			Delay(NTC_DELAY_FRAME);
+
+			if (GetDistance(me, x, y) < 3) {
+				break;
+			}
+
+			if ((i % 10) === 9) {
+				ClickMap(NTC_CLICK_LUP, NTC_SHIFT_NONE, null);
+				Delay(NTC_DELAY_FRAME);
+
+				if ((i % 120) === 119 && me.x === prex && me.y === prey) {
+					return false;
+				}
+			}
+		}
+
+		ClickMap(NTC_CLICK_LUP, NTC_SHIFT_NONE, null);
+		Delay(NTC_DELAY_FRAME);
+		return (i < 240);
+	},
+
+	
+
+	TownWalk: function (areaid, x, y) {
+		var i, n, path;
+
+		//if (me.intown  && me.classid === 3 && me.GetSkill(NTC_HAND_RIGHT) !== 115) {
+			//CLSkill.PutSkill(115, NTC_HAND_RIGHT);
+		//}
+
+		while (GetDistance(me.x, me.y, x, y) > 4) {
+			path = GetPath(areaid, me.x, me.y, x, y, 0);
+
+			if (!path) {
+				return false;
+			}
+
+			if(path.length === 0) {
+				Delay(300);
+				path = GetPath(areaid, x, y, me.x, me.y, 0);
+
+				if (path.length === 0) {
+					return false;
+				}
+
+				//path.reverse();
+			}
+
+			for (i = 0; i < path.length; i += 1) {
+				for (n = 0; n < 3; n += 1) {
+					if (this.To(path[i][0], path[i][1])) {
+						break;
+					}
+
+					if (n === 3) {
+						return false;
+					}
+				}
+			}
+		}
+		return true;
+	}
+};

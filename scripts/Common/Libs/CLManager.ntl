@@ -1,0 +1,17 @@
+var CLManager = {
+    SendEvent: function (location, statusString) {
+		return SendCopyData("Etal Manager", location, statusString);
+	},
+
+	SendError: function (msg) {
+		return SendCopyData("Etal Manager", ETAL_MGR_ERROR_LOG, CLCommon.TimeStamp() + " " + msg);
+	},
+
+	LogItem: function (iteminfo) {
+		return SendCopyData("Etal Manager", ETAL_MGR_ITEM_LOG, CLCommon.TimeStamp() + " " + iteminfo);
+	},
+
+	PrintMsg: function (msg) {
+		return SendCopyData( "Etal Manager", ETAL_MGR_PRINT_LOG, CLCommon.TimeStamp() + " " + msg);
+	}
+};

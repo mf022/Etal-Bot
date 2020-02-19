@@ -1,0 +1,403 @@
+var CLTown = {
+	IgnoredItems: [
+		"leg", // wirt's leg
+		"aqv", // Arrows quiver
+		"cqv", // Bolts quiver
+		"key", // Keys
+		"tbk", // Tome of Town Portal
+		"ibk", // Tome of Identify
+		"tsc", // Scroll of Town Portal
+		"isc", // Scroll of Identify
+		"yps", // Antidote potion
+		"vps", // Stamina potion
+		"wms", // Thawing potion
+		"gps", // Rancid Gas Pot
+		"ops", // Oil Potion
+		"gpm", // Choking Gas Pot
+		"opm", // Exploding Pot
+		"gpl", // Strangling Gas
+		"opl", // Fulminating Pot
+		"hp1","hp2","hp3","hp4","hp5", // Healing potions
+		"mp1","mp2","mp3","mp4","mp5", // Mana potions
+		"rvs","rvl"], // Rejuvenation potions
+
+	GetUnidItems: function () {
+		var i,
+			uniditems = [],
+			items = me.GetItems();
+
+		if (!items) {
+			return uniditems;
+		}
+
+		for (i = 0; i < items.length; i += 1){
+		if (items[i].mode === 0 && items[i].itemloc === 0 && !(items[i].itemflag & 0x10)) {
+				uniditems.push(items[i]);
+			}
+		}
+
+		return uniditems;
+	},
+
+	CheckSpace: function (itemX, itemY) {
+		var i, j, x, y, items, invspace;
+
+		invspace = new Array(4);
+		invspace[0] = new Array(10);
+		invspace[1] = new Array(10);
+		invspace[2] = new Array(10);
+		invspace[3] = new Array(10);
+
+		for (y = 0; y < 4; y += 1) {
+			for (x = 0; x < 10; x += 1) {
+				invspace[y][x] = 0;
+			}
+		}
+
+		items = me.GetItems();
+
+		if (!items) {
+			return false;
+		}
+
+		for (i = 0; i < items.length; i += 1) {
+			if (items[i].mode === 0 && items[i].itemloc === 0) {
+				for (y = 0; y < items[i].ysize; y += 1) {
+					for (x = 0; x < items[i].xsize; x += 1) {
+						invspace[y + items[i].y][x + items[i].x] = 1;
+					}
+				}
+			}
+		}
+
+		for (i = 0; i < 5 - itemY; i += 1) {
+			invloop2:
+
+			for (j = 0; j < 11 - itemX; j += 1) {
+				for (y = 0; y < itemY; y += 1) {
+					for (x = 0; x < itemX; x += 1) {
+						if (invspace[i + y][j + x]) {
+							continue invloop2;
+						}
+					}
+				}
+
+				return true;
+			}
+		}
+
+		return false;
+	},
+
+	Interact: function (npc){
+		var i,
+			uiflag = 0x08;
+
+		if (!npc) {
+			return false;
+		}
+
+		if (npc.classid === NTC_UNIT_STASH) {
+			uiflag = 0x19;
+		} else if (npc.classid === NTC_UNIT_CUBE) {
+			uiflag = 0x1A;
+		}
+
+		if (GetUIState(uiflag)) {
+			return true;
+		}
+
+		for (i = 0; i < 40; i += 1) {
+			if ((i % 10) === 0) {
+				if (npc.classid === NTC_UNIT_CUBE) {
+					me.ClickItem(1, npc);
+				} else {
+					if (i > 20) {
+						CLCommon.RemoveLag(npc, 700, 10);
+					} else if (i > 10) {
+						CLCommon.RemoveLag(npc);
+					}
+
+					if (me.classid === 1 && CLConfig.Telekinesis && uiflag === 0x19 && CLSkill.GetLevel(43) && GetDistance(me, npc) > 5 && GetDistance(me, npc) < 23) {
+						if (i > 10) {
+							CLMMove.CloseInt(npc, Math.round(GetDistance(me, npc) / 2), false);
+						}
+						
+						CLSkill.Cast(43, NTC_HAND_RIGHT, npc);
+					} else {
+						CLCommon.DoClick(NTC_CLICK_LDOWN, NTC_SHIFT_NONE, npc);
+					}
+				}
+			}
+
+			Delay((i < 10) ? 100 : 200);
+
+			if (GetUIState(uiflag)) {
+				CLCommon.PingDelay(500);
+				return true;
+			}
+		}
+
+		return false;
+	},
+	
+	DoTrade: function(npc, type) {
+		var i;
+
+		if (!npc || type === undefined) {
+			return false;
+		}
+
+		if (GetUIState(0x0C)) {
+			return true;
+		}
+
+
+		for (i = 0; i < 20; i += 1) {
+			if ((i % 10) === 0) {
+				me.SelectNPCMenu(type);
+			}
+
+			Delay(200);
+
+			if (GetUIState(0x0C)) {
+				CLCommon.PingDelay(1000);
+				return true;
+			}
+		}
+		return false;
+	},
+
+	BeltInit: function (){
+		var i, col, row,
+			pots = me.GetItems();
+
+		for (i = 0; i < pots.length; i += 1) {
+			if (pots[i].mode === 2 && (pots[i].itemtype === 76 || pots[i].itemtype === 77 || pots[i].itemtype === 78)) {
+				col = pots[i].x % 4;
+				row = Math.floor(pots[i].x / 4);
+
+				switch (col) {
+					case 0:
+						CLTownManager.BeltCol1[row] = 1;
+						break;
+					case 1:
+						CLTownManager.BeltCol2[row] = 1;
+						break;
+					case 2: 
+						CLTownManager.BeltCol3[row] = 1;
+						break;
+					case 3: 
+						CLTownManager.BeltCol4[row] = 1;
+						break;
+				}
+			}
+		}
+		return;
+	},
+	
+	SortPotions: function () {
+		var a, b, c, d, i, col, row,
+			BeltSize = CLCommon.GetBeltSize(),
+			drop = false,
+			pots = me.GetItems();
+
+		if (!pots) {
+			Print("Potions not found");
+			return;
+		}
+
+		for (i = 0; i < pots.length; i += 1) {
+			if (pots[i].mode === 2 && (pots[i].itemtype > 75 && pots[i].itemtype < 79)){
+				col = pots[i].x % 4;
+				row = Math.floor(pots[i].x / 4);
+
+				switch (pots[i].itemtype) {
+					case 76: 
+						if (CLConfig.Belt[col] !== "hp") {
+							drop = true;
+						}
+						break;
+
+					case 77:
+						if (CLConfig.Belt[col] !== "mp") {
+							drop = true;
+						}
+						break;
+
+					case 78:
+						if (CLConfig.Belt[col] !== "rv") {
+							drop = true;
+						}
+						break;
+				}
+
+				if (drop) {
+					if (!GetUIState(0x1F)) {
+						SetUIState(0x1F, true);
+					}
+
+					CLItem.Drop(pots[i]);
+					drop = false;
+				}
+
+			}
+		}
+
+		this.BeltInit();
+
+		a = CLTownManager.BeltCol1[0] + CLTownManager.BeltCol1[1] + CLTownManager.BeltCol1[2] + CLTownManager.BeltCol1[3];
+		if (a < BeltSize) {
+			this.MoveInvPots(a,BeltSize,0);
+		}
+
+		c = CLTownManager.BeltCol3[0] + CLTownManager.BeltCol3[1] + CLTownManager.BeltCol3[2] + CLTownManager.BeltCol3[3];
+		if (c < BeltSize) {
+			this.MoveInvPots(c,BeltSize,2);
+		}
+
+		d = CLTownManager.BeltCol4[0] + CLTownManager.BeltCol4[1] + CLTownManager.BeltCol4[2] + CLTownManager.BeltCol4[3];
+		if (d < BeltSize) {
+			this.MoveInvPots(d,BeltSize,3);
+		}
+
+		b = CLTownManager.BeltCol2[0] + CLTownManager.BeltCol2[1] + CLTownManager.BeltCol2[2] + CLTownManager.BeltCol2[3];
+		if (b < BeltSize) {
+			this.MoveInvPots(b,BeltSize,1);
+		}
+
+		if(GetUIState(0x1F)){
+			SetUIState(0x1F, false);
+		}
+	},
+
+	MoveInvPots: function (amount, bsize, xcol){
+		var potType, j, i, k,
+			items = me.GetItems();
+
+		if (!items) {
+			return;
+		}
+
+		if (Config.Belt[xcol] === "hp") {
+			potType = 76;
+		}
+
+		if (Config.Belt[xcol] === "mp") {
+			potType = 77;
+		}
+
+		if (Config.Belt[xcol] === "rv") {
+			potType = 78;
+		}
+
+		for (i = amount; i < bsize; i += 1){
+			for (j = 0; j < items.length; j += 1){
+				if (items[j].mode === 0 && items[j].itemloc === 0 && items[j].itemtype === potType) {
+					if (!GetUIState(0x01)) {
+						SetUIState(0x01, true);
+					}
+
+					if (!GetUIState(0x1F)) {
+						SetUIState(0x1F, true);
+					}
+
+					Delay(200);
+					CLItem.ToCursor(items[j]);
+					Delay(200);
+
+					switch(amount){
+						case 0: me.ClickItem(0, xcol, 0, 5);
+								break;
+						case 1: me.ClickItem(0, xcol, 1, 5);
+								break;
+						case 2: me.ClickItem(0, xcol, 2, 5);
+								break;
+						case 3: me.ClickItem(0, xcol, 3, 5);
+								break;
+					}
+
+					Delay(200);
+					amount += 1;
+
+					for(k = 0; k < 15; k += 1){					
+						Delay(300);
+
+						if (!me.itemoncursor) {
+							break;
+						}
+					}
+
+					if (amount === bsize) {
+						return;
+					}
+				}
+			}
+
+			if (me.itemoncursor) {
+				CLItem.ClearCursor();
+			}
+		}
+		return;
+	},
+
+	GetTome: function (type){
+		var i, items;
+
+		if(type === undefined) {
+			type = 0;
+		}
+
+		if (type === 1) {
+			items = me.GetItems(518);
+		}
+
+		if (type === 0) {
+			items = me.GetItems(519);
+		}
+
+		if (items) {
+			for (i = 0; i < items.length; i += 1) {
+				if (items[i].mode === 0 && items[i].itemloc === 0) {
+					return items[i];
+				}
+			}
+		}
+
+		return null;
+	},
+
+	ClearInventory: function () {
+		var i, items,
+			retval = true,
+			ignorestring = this.IgnoredItems.join();
+
+		items = me.GetItems();
+
+		if (!items) {
+			return false;
+		}
+
+		for (i = 0; i < items.length; i += 1) {
+			if (items[i].mode === 0 && items[i].itemloc === 0) {
+				if (CLConfig.Columns[items[i].y][items[i].x] > 0) {
+					if (ignorestring.indexOf(items[i].code) !== -1 || CLPickit.CheckItem(items[i])[0] !== 0) {
+						continue;
+					}
+
+					SetUIState(0x01, true);
+
+					if(CLItem.Drop(items[i])) {
+						CLCommon.PingDelay(200);
+					} else {
+						retval = false;
+					}
+				}
+			}
+		}
+
+		me.Cancel(1);
+
+		return retval;
+	}
+};

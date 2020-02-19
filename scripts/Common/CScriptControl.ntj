@@ -1,0 +1,93 @@
+var LastScript = false;
+var Rev = "0.01";
+
+function NTMain(){
+	Delay(1000);
+
+	SetTitle(me.name);
+	Include("Common/Libs/CLColorConverter.ntl");
+	Include("Common/Libs/CLCommon.ntl");
+
+	CLCommon.LoadLibs();
+	CLConfig.Include();
+	LoadConfig();
+
+	CLAttack.Initialize();
+
+	SetUIState(0x0A, true)
+	RegisterEvent("scriptmsg", ScriptMsgEvents);
+	RegisterEvent("keyup", KeyEvents);
+
+	Load("Common/Bots/" + CLScript.Runs[CLScript.Current]);	
+	SetStatusText("[" + Rev + "]   " + C_GREEN + CLScript.Runs[CLScript.Current]); 
+
+	while (!LastScript) {
+		//Print("Debug");
+		Delay(1000);	
+	
+	}
+	
+	ExitGame();
+}
+
+function ScriptMsgEvents(msg) {
+	switch (msg) {
+	case "SCRIPT_END":
+		if (++CLScript.Current < CLScript.Runs.length) {
+			Load("Common/Bots/" + CLScript.Runs[CLScript.Current]);
+			SetStatusText("[" + Rev + "]   " + C_GREEN +  CLScript.Runs[CLScript.Current]);
+		} else {
+			LastScript = true;
+		}
+		break;
+	default:
+		break;
+	}	
+}
+	
+function KeyEvents(keycode) {
+	var script;
+
+	switch (keycode) {		
+		case 19:
+			script = CLScript.Find(CLScript.Runs[CLScript.Current]);
+
+			if (script.running) {
+				script.Stop(true);
+				Print("Script Stopped");
+				SetStatusText("[" + Rev + "]   " + C_RED  + CLScript.Runs[CLScript.Current]);
+				break;	
+			}
+			
+				Print("Loading Script - " + CLScript.Runs[CLScript.Current]);
+				Load("Common/Bots/" + CLScript.Runs[CLScript.Current]);
+				SetStatusText("[" + Rev + "]   " + C_GREEN +  CLScript.Runs[CLScript.Current]);
+			break;
+
+		case 33:
+			CLScript.Current++;
+			if (CLScript.Current == CLScript.Runs.length) {
+				CLScript.Current = 0;
+			}
+
+			SetStatusText("[" + Rev + "]   " + C_RED  + CLScript.Runs[CLScript.Current]);
+			break;
+
+		case 34:
+			CLScript.Current--; 
+			if (CLScript.Current < 0) { CLScript.Current = CLScript.Runs.length - 1; }
+			SetStatusText("[" + Rev + "]   " + C_RED  + CLScript.Runs[CLScript.Current]);
+			break;
+
+		case 106:
+			Print(C_YELLOW + "Area ID = " + me.areaid);
+			Print(C_YELLOW + "X = " + me.x + "   Y = " + me.y);
+			break;
+
+		default:
+			Print("key pressed = " + keycode);
+			break;	
+	}
+	
+	return;	
+}

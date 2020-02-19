@@ -1,0 +1,135 @@
+var CLDevTools = {
+	LogFunctions: function () {
+		var i, file, fline, split1,
+			attacks = ["Amazon", "Assassin", "Barbarian", "Druid", "Necromancer", "Paladin", "Sorceress"],
+			libs = [ "CLMove", "CLConstants", "CLColorConverter", "CLTownManager", "CLConfig", "CLTracker", "CLFile", "CLManager",
+				"CLPrecast", "CLSkill", "CLUnit", "CLDevTools", "CLScript", "CLTown", "CLJson", "CLVoyageTo"];
+
+		for (i in libs) {
+			CLFile.Log("functions.txt", libs[i] + ":\n");
+			file = FileOpen("Common/Libs/" + libs[i] + ".ntl", 0);
+
+			if (!file) {
+				Print("Unable to open file " + libs[i]);
+			}
+
+			while (!file.eof) {
+				fline = file.ReadLine();
+
+				if (fline.indexOf(":") !== -1 && fline.indexOf("function") !== -1 && fline.indexOf("if") === -1) {
+					split1 = fline.split("{")[0];
+					CLFile.Log("functions.txt", "		" + split1 + "\n");
+				}
+			}
+
+			file.Close();
+			CLFile.Log("functions.txt", "\n");
+		}
+
+		for (i in attacks) {
+			CLFile.Log("functions.txt", attacks[i] + " attack functions\n");
+			CLFile.Log("functions.txt", "CLToon:\n");
+			
+			file = FileOpen("Common/Libs/Char Attacks/CL" + attacks[i] + ".ntl", 0);
+
+			if (!file) {
+				Print("Unable to open file " + attacks[i]);
+			}
+
+			while (!file.eof) {
+				fline = file.ReadLine();
+
+				if (fline.indexOf(":") !== -1 && fline.indexOf("function") !== -1 && fline.indexOf("if") === -1) {
+					split1 = fline.split("{")[0];
+					CLFile.Log("functions.txt", "		" + split1 + "\n");
+				}
+			}
+
+			file.Close();
+			CLFile.Log("functions.txt", "\n");
+		}
+
+		Print("functions logged");
+	},
+
+	PrintObjects: function (obj) {
+		var key, count = 0;
+
+		for (key in obj) {
+			if (key === "description") { 
+				count += 1; continue;
+			} // not currently working - throws exception
+
+			Print(key + ": " + obj[key]);
+			count += 1;
+
+			if (key == "maxgametime") {
+				break;
+			} // throws exception as seemsto think thee's further keys/properties
+		}
+		Print("Number of properties = " + count);
+	},
+
+    FindUnit: function (unittype, search, retry) {
+		var i, unit, oldunit;
+
+		switch (arguments.length) {
+		case 0:	unit = GetUnit(2);
+			break;
+		case 1:	unit = GetUnit(unittype);
+			break;
+		case 2:	unit = GetUnit(unittype, search);
+			retry = 0;
+			break;
+		}
+
+		if (!unit) {
+			Print("No Units found");
+			return false;
+		}
+		
+		if (unit.length > 1) { // probaly not needed
+			for (i = 0; i < unit.length; i++) {
+				this.PrintObjects(unit[i]);
+			}
+		}
+		else while (unit){
+			if (unit == oldunit) {
+				break;
+			}
+			oldunit = unit;
+			this.PrintObjects(unit);
+		}unit.GetNext();
+		
+		Print("FindUnit search completed");
+
+		return null;
+	},
+
+	FindPresetUnits:	function (type) {
+		var i, unit = GetPresetUnits(me.areaid, type);
+		if (!unit) {
+			Print("No prest Units found");
+			return false;
+		}
+
+		for (i = 0; i < unit.length; i++) {
+			this.PrintObjects(unit[i]);
+		}
+
+		Print("Preset Units search completed");
+	},
+	
+	AreaExits:	function (type) {
+		var myexits = GetArea(me.areaid)
+		if (!myexits) {
+			Print("No Exits found");
+			return false;
+		}
+		for (i = 0; i< myexits.exits.length; i++){
+			Print("Exit to " + myexits.exits[i].target);
+			Print("Exit Co-ord X:" + myexits.exits[i].x + " Y:" + myexits.exits[i].y);
+		}
+		return true;
+	}
+};

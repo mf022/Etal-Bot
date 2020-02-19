@@ -1,0 +1,48 @@
+Include("Common/Libs/CColorConverter.ntl");
+
+function NTMain() {
+	var LifeMax, ManaMax, player, mypartyid,
+		count = 0;
+
+	Delay(1000);
+	SetTitle(me.name);
+	Print("NTMap Loaded")
+
+	while (me.ingame) {
+		Delay(500);
+	}
+}
+
+function NT_KeyEvents(keycode)
+{
+	switch(keycode)
+	{
+	case 109: // show or hide enemy - keypad '-'
+		if (me.showenemyonautomap) {
+			me.showenemyonautomap = false;
+			Print("Enemy on Automap : Off");
+		} else {
+			me.showenemyonautomap = true;
+			Print("Enemy on Automap : On");
+		}
+		break;
+	case 107: // show or hide missile - keypad '+'
+		if (me.showmissileonautomap) {
+			me.showmissileonautomap = false;
+			Print("Missile on Automap : Off");
+		} else {
+			me.showmissileonautomap = true;
+			Print("Missile on Automap : On");
+		}
+		break;
+	case 106: // auto party on/off - keypad '*'
+		if (CLConfig.AutoParty) {
+			CLConfig.AutoParty = false;
+			Print("Auto Party : Off");
+		} else {
+			CLConfig.AutoParty = true;
+			Print("Auto Party : On");
+		}
+		break;
+	}
+}

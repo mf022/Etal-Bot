@@ -1,0 +1,16 @@
+var Debug = true;
+
+function LoadConfig() {
+	CLScript.Runs.push("Test.ntj");
+
+	// Belt settings
+	CLConfig.Belt[0] = "hp";
+	CLConfig.Belt[1] = "mp";
+	CLConfig.Belt[2] = "rv";
+	CLConfig.Belt[3] = "rv";
+
+	// Precast settings
+	CLConfig.SwitchCastSorc = false;
+	CLConfig.EnchantSelf = true;
+	CLConfig.ColdArmor = 40; // 40/"frozen", 50/"shiver", 60/"chilling", 0/"none"
+}

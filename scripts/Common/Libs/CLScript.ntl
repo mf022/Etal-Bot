@@ -1,0 +1,35 @@
+var CLScript = {
+	Runs: [],
+	Current: 0,
+
+	Find: function (scriptname) {
+		var script, scriptpath;
+
+		if (scriptname === undefined) {
+			return false;
+		}
+
+		script = GetScript();
+
+		if (script){
+			do {
+				scriptpath = script.name.toLowerCase();
+
+				if (scriptpath.indexOf(scriptname.toLowerCase()) !== -1) {
+					return script;
+				}
+			} while (script.GetNext());
+		}
+
+		return null;
+	},
+
+	SendMsg: function (scriptname, msg) {
+		var script = this.Find(scriptname);
+
+		if (script) {
+			return script.Send(msg);
+		}
+		return false;
+	}
+};

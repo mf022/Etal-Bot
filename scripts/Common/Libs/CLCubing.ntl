@@ -1,0 +1,36 @@
+var CLCubing = {
+	Recipes: [],
+
+	CheckItem: function (item) {
+		var i,
+			eth = ((item.itemflag & 0x400000) === 0x400000);
+
+		if (item === undefined || !CLConfig.Cubing || !this.Recipes.length) {
+			return false;
+		}
+
+		for (i = 0; i < this.Recipes.length; i += 1) {
+			if (this.Recipes[i].indexOf(item.classid) !== -1) {
+				return true;
+			}
+
+			if (Array.isArray(this.Recipes[i])) {
+				if (this.Recipes[i][0] === item.classid) {
+					switch (this.Recipes[i][1]) {
+						case "eth":
+							if (eth) {
+								return true;
+							}
+							break;
+						case "non":
+							if (!eth) {
+								return true;
+							}
+							break;
+					}
+				}
+			}
+		}
+		return false;
+	}
+};

@@ -1,0 +1,554 @@
+var CLMove = {
+	Debug: false,
+
+	To: function (areaid, x, y, retry, clearpath, canswitch) {
+		var i, n, path,
+			teleport = 0;
+
+		if (!retry) {
+			retry = 3;
+		}
+
+		if (me.intown  && me.classid === 3 && me.GetSkill(NTC_HAND_RIGHT) !== 115) {
+			//CLSkill.Put(115, NTC_HAND_RIGHT);
+		}
+		
+		if (!me.intown && CLSkill.GetLevel(54) > 0) {
+			teleport = 1;
+		}
+
+		path = GetPath(areaid, me.x, me.y, x, y, teleport);
+
+		if (!path) {
+			return false;
+		}
+
+		if (path.length === 0) {
+			Delay(300);
+			path = GetPath(me.areaid, x, y, me.x, me.y, 2);
+
+			if(path.length === 0) {
+				return false;
+			}
+
+			path.Reverse();
+		}
+		
+		if (me.areaid === 2) {
+			teleport = 0;
+		}
+
+		for (i = 0; i < path.length; i += 1) {
+			for (n = 0; n < retry; n += 1) {
+				if (me.intown) {
+					if (this.TownWalk(path[i][0], path[i][1])) {
+						break;
+					}
+				} else if (teleport === 1) {
+					if (this.Teleport(path[i][0], path[i][1])) {
+						break;
+					}
+				} else {
+					if (this.Walk(path[i][0], path[i][1])) {
+						break;
+					}
+				}
+
+				if (n === retry) {
+					return false;
+				}
+			}
+		}
+
+		return true;
+	},
+
+	TownWalk: function (x, y) {
+		var i, prex, prey;
+
+		for (i = 0; i < 240; i += 1) {
+			if ((i % 10) === 0) {
+				if ((i % 120) === 0) {
+					prex = me.x;
+					prey = me.y;
+				}
+
+				ClickMap(NTC_CLICK_LDOWN, NTC_SHIFT_NONE, x, y);
+			}
+
+			Delay(NTC_DELAY_FRAME);
+
+			if (GetDistance(me, x, y) < 3) {
+				break;
+			}
+
+			if ((i % 10) === 9) {
+				ClickMap(NTC_CLICK_LUP, NTC_SHIFT_NONE, null);
+				Delay(NTC_DELAY_FRAME);
+
+				if ((i % 120) === 119 && me.x === prex && me.y === prey) {
+					return false;
+				}
+			}
+		}
+
+		ClickMap(NTC_CLICK_LUP, NTC_SHIFT_NONE, null);
+		Delay(NTC_DELAY_FRAME);
+
+		return (i < 240);
+	},
+
+	Teleport: function  (x, y) {
+		var i;
+
+		CLSkill.Cast(54, NTC_HAND_RIGHT, x, y);
+		Delay(NTC_DELAY_FRAME);
+
+		for (i = 0; i < 15; i += 1) {
+			if (Math.abs(me.x-x) < 4 && Math.abs(me.y-y) < 4) {
+				return true;
+			}
+
+			Delay(NTC_DELAY_FRAME);
+		}
+		return false;
+	},
+
+	Walk: function (x, y) {
+		var i;
+
+		if (me.runwalk === 1 && me.stamina / me.staminamax * 100 <= 20) {
+			me.runwalk = 0;
+		}
+
+		if (me.runwalk === 0 && me.stamina / me.staminamax * 100 >= 50) {
+			me.runwalk = 1;
+		}
+
+		for (i = 0; i < 3; i += 1) {
+			ClickMap(NTC_CLICK_LDOWN, NTC_SHIFT_NONE, x, y);
+			Delay(NTC_DELAY_FRAME);
+			ClickMap(NTC_CLICK_LUP, NTC_SHIFT_NONE, null);
+
+			while (me.mode !== 1 && me.mode !== 5 && me.mode !== 17) {
+				Delay(40);
+			}
+
+			if (GetDistance(me, x, y) < 2) {
+				return true;
+			}
+		}
+		return false;
+	},
+
+	Location: function (location) {
+		var fire, x, y, roomAct1Town, roomAct1BloodMoor, door, unit, wp, fireUnit;
+
+		if (me.act === 1) {
+			wp = GetPresetUnit(1, 2, 119);
+			fireUnit = GetPresetUnit(1, 2, 39);
+
+			if (!fireUnit) {
+				return false;
+			}
+
+			fire = [fireUnit.roomx * 5 + fireUnit.x, fireUnit.roomy * 5 + fireUnit.y];
+
+			switch (location) {
+				case "Stash": this.To(1, fire[0] - 7, fire[1] - 12);
+					break;
+				case "Waypoint": this.To(1, wp.roomx * 5 + wp.x, wp.roomy * 5 + wp.y);
+					break;
+				case "Warriv": this.To(1, fire[0] - 5, fire[1] - 2);
+					break;
+				case "Cain": this.To(1, fire[0] + 6, fire[1] - 5);
+					break;
+				case "Kashya": this.To(1, fire[0] + 14, fire[1] - 4);
+					break;
+				case "Charsi": this.To(1, fire[0] - 39, fire[1] - 25);
+					break;
+				case "Akara": this.To(1, fire[0] + 56, fire[1] - 30);
+					break;
+				case "Gheed": this.To(1, fire[0] - 34, fire[1] + 36);
+					break;
+				case "Portalspot": this.To(1, fire[0] + 10, fire[1] + 18);
+					break;
+				case "Exit": 	
+					roomAct1Town = GetRoom(1);
+					roomAct1BloodMoor = GetRoom(2);
+
+					if (roomAct1Town && roomAct1BloodMoor) {
+						x = roomAct1Town.x - roomAct1BloodMoor.x;
+						y = roomAct1Town.y - roomAct1BloodMoor.y;
+
+						if (x < 0 && y < 0) { // South Exit
+							this.To(1, fire[0] + 134, fire[1]);
+						} else if (x > 0 && y < 0) { //North Exit
+							this.To(1, fire[0] - 85, fire[1] + 6);
+						} else if (x === 0 && y < 0) { //West Exit
+							this.To(1, fire[0] + 13, fire[1] + 75);
+						} else if (x === 0 && y > 0) { //East Exit
+							this.To(1, fire[0] + 13, fire[1] - 18);
+						}
+					}
+
+					break;
+				default:
+					return false;
+			}
+
+		}
+
+		if (me.act === 2) {
+			switch (location) {
+				case "Fara": this.To(40, 5124, 5082);
+					break;
+				case "Cain": this.To(40, 5124, 5082);
+					break;
+				case "Lysander": this.To(40, 5118, 5104);
+					break;
+				case "Greiz": this.To(40, 5033, 5053);
+					break;
+				case "Elzix": this.To(40, 5032, 5102);
+					break;
+				case "Palace": this.To(40, 5088, 5153);
+					break;
+				case "Sewers": this.To(40, 5221, 5181);
+					break;
+				case "Meshif": this.To(40, 5205, 5058);
+					break;
+				case "Drognan": this.To(40, 5097, 5035);
+					break;
+				case "Atma": this.To(40, 5137, 5060);
+					break;
+				case "Warriv": this.To(40, 5152, 5201);
+					break;
+				case "Portalspot": this.To(40, 5168, 5060);
+					break;
+				case "Stash": this.To(40, 5124, 5076);
+					break;
+				case "Waypoint": this.To(40, 5070, 5082);
+					break;
+				case "Exit": 
+					unit = GetPresetUnits(41, NTC_UNIT_OBJECT);
+					if (unit[0].id === 286) {
+						this.To(40, me.x, 5000);
+					} else {
+						this.To(40, 4977, 5065);
+					}
+
+					break;
+				default:
+					return false;
+			}
+		}
+
+		if (me.act === 3) {
+			switch (location) {
+				case "Meshif": this.To(75, 5118, 5168);
+					break;
+				case "Hratli": this.To(75, 5127, 5172);
+					break;
+				case "Hratli2": this.To(75, 5223, 5048);
+					break;
+				case "Ormus": this.To(75, 5129, 5093);
+					break;
+				case "Asheara": this.To(75, 5043, 5093);
+					break;
+				case "Alkor": this.To(75, 5083, 5016);
+					break;
+				case "Cain": this.To(75, 5148, 5066);
+					break;
+				case "Portalspot": this.To(75, 5150, 5063);
+					break;
+				case "Stash": this.To(75, 5144, 5059);
+					break;
+				case "Waypoint": this.To(75, 5158, 5050);
+					break;
+				case "Exit": this.To(75, 5145, 4984);
+					break;
+				default:
+					return false;
+			}
+		}
+
+		if (me.act === 4) {
+			switch (location) {
+				case "Halbu": this.To(103, 5089, 5031);
+					break;
+				case "Tyrael": this.To(103, 5027, 5027);
+					break;
+				case "Jamella": this.To(103, 5088, 5054);
+					break;
+				case "Cain": this.To(103, 5027, 5027);
+					break;
+				case "Portalspot": this.To(103, 5045, 5042);
+					break;
+				case "Stash": this.To(103, 5022, 5040);
+					break;
+				case "Waypoint": this.To(103, 5043, 5018);
+					break;
+				case "Exit": this.To(103, 5190, 5096);
+					break;
+				default:
+					return false;
+			}
+		}
+
+		if (me.act === 5) {
+			switch (location) {
+				case "Cain": this.To(109, 5119, 5061);
+					break;
+				case "Larzuk": this.To(109, 5141, 5045);
+					break;
+				case "Malah": this.To(109, 5078, 5029);
+					break;
+				case "Qual-Kehk": this.To(109, 5066, 5083);
+					break;
+				case "Anya": this.To(109, 5112, 5120);
+					break;
+				case "Portal": this.To(109, 5118, 5120);
+					break;
+				case "Nihlathak": this.To(109, 5071, 5111);
+					break;
+				case "Portalspot": this.To(109, 5098, 5019);
+					break;
+				case "Stash": this.To(109, 5129, 5061);
+					break;
+				case "Waypoint": this.To(109, 5113, 5068);
+					break;
+				case "Exit": this.To(109, 5026, 5093);
+					door = CLUnit.Find(NTC_UNIT_OBJECT , 449);
+					CLCommon.OpenChest(door);
+					this.To(109, 4990, 5090);
+					break;
+				default:
+					return false;
+			}
+		}
+	},
+
+	TakeWaypoint: function (areaId) {
+		var i, chk, chk2, wp, wpid;
+
+		if (me.areaid === areaId) {
+			return true;
+		}
+
+		chk = WpAreas.indexOf(me.areaid);
+		chk2 = WpAreas.indexOf(areaId);
+
+		if (chk === -1 || chk2 === -1) {
+			if (this.Debug) {
+				CLManager.SendError("Invalid area " + areaId);
+			}
+			return false;
+		}
+
+		wpid = WpIds[chk];
+		wp = CLUnit.Find(2, wpid);
+
+		if (!wp) {
+			Print("No Waypoint found");
+			return false;
+		}
+
+		for (i = 0; i < 3; i += 1) {
+			ClickMap(0, 0, wp);
+			Delay(300);
+
+			if (GetUIState(0x14)) {
+				break;
+			}
+		}
+
+		if (!GetUIState(0x14)) {
+			return false;
+		}
+
+		if (GetWaypoint(chk2)) {
+			me.TakeWaypoint(areaId);
+		} else {
+			Print("Dont Have that Waypoint");
+			// TODO - add voyageto to get waypoint
+			Include("Common/libs/CLVoyageTo.ntl");
+			CLVoyage.To(areaId);
+		}
+
+		while (me.areaid !== areaId) {
+			Delay(100);
+		}
+
+		Delay(200);
+
+		if (GetUIState(0x14)) {
+			SetUIState(0x14, false);
+			Delay(200);
+		}
+
+		if (me.areaid === areaId) {
+			return true;
+		}
+
+		return false;
+	},
+
+	MakeTP: function () {
+		var i,
+			tpbook = me.GetItems(518);
+
+		if (me.intown) {
+			return true;
+		}
+
+		if (tpbook) {
+			for	(i = 0; i < tpbook.length; i += 1) {
+				if (tpbook[i].itemloc === 0 && tpbook[i].bodyloc === 0) {
+					if (tpbook[i].GetStat(70) > 0) {
+						if (CLSkill.Cast(220, NTC_HAND_RIGHT)) {
+							Delay(200);
+							return true;
+						}
+					}
+				}
+			}
+		}
+		return false;
+	},
+
+	TakePortal: function (how, ownername) {
+		var MyPortal, portalname, portal,
+			prearea = me.areaid;
+
+		if (how === "BluePortal") {
+			portalname = "portal";
+		}
+
+		if (!ownername) {
+			ownername = me.name;
+		}
+
+		portal = GetUnit(NTC_UNIT_OBJECT, portalname);
+
+		if (!portal) {
+			Print("No portal found");
+			return false;
+		}
+
+		do {
+			if (portal.GetParent() === ownername) {
+				MyPortal = portal;
+				break;
+			}
+		} while (portal.getNext());
+
+		if (!MyPortal) {
+			return false;
+		}
+
+		ClickMap(0, 0, portal);
+		Delay(200);
+
+		while (me.areaid === 0) {
+			Delay(100);
+		}
+
+		if (me.areaid === prearea) {
+			return false;
+		}
+
+		return true;
+	},
+	
+	CheckAct: function (act) {
+		var dest;
+
+		switch (act) {
+			case 1:
+				dest = 1;
+				break;
+			case 2:
+				dest = 40;
+				break;
+			case 3:
+				dest = 75;
+				break;
+			case 4:
+				dest = 103;
+				break;
+			case 5:
+				dest = 109;
+				break;
+		}
+		
+		if (!CLCommon.InTown()) {
+			this.MakeTP();
+			this.TakePortal("BluePortal");
+		}
+		
+		if (me.act !== act){
+			this.Location("Waypoint");
+			this.TakeWaypoint(dest);
+		}
+
+		if (me.areaid === dest){
+			return true;
+		}
+		return false;
+	},
+
+	PresetUnit: function (area, type, Classid) {
+		var i, unit = GetPresetUnits(area, type);
+
+		if (!unit) {
+			return false;
+		}
+
+		for (i = 0; i < unit.length; i += 1){
+			if (unit[i].id === Classid) {
+				return this.To(area, unit[i].roomx * 5 + unit[i].x , unit[i].roomy * 5 + unit[i].y);
+			}
+
+		}
+		return false;
+	},
+
+	ToStair: function (subarea) {
+		var i,
+			stair = GetArea(me.areaid);
+
+		for (i = 0; i < stair.exits.length; i += 1) {
+			if (stair.exits[i].target === subarea) {
+				if (this.To(me.areaid, stair.exits[i].x , stair.exits[i].y)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	},
+
+	TakeStair: function (subarea){
+		var i, k, unit,
+			stair = GetArea(me.areaid);
+
+		for (i = 0; i < stair.exits.length; i += 1) {
+			if (stair.exits[i].target === subarea) {
+				unit = CLUnit.Find( NTC_UNIT_TILE, stair.exits[i].id);
+
+				if (unit) {
+					Delay(200);
+
+					for (k = 0; k < 3; k += 1) {
+						ClickMap(0, 0, unit);
+						Delay(200);
+						if (me.areaid === subarea){
+							return true;
+						}
+					}
+				}
+				return false;
+			}
+		}
+		return false;
+	}
+};

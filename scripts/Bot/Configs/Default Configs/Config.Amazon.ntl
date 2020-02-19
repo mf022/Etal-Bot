@@ -1,0 +1,11 @@
+var Debug = true;
+
+function LoadConfig() {
+	CLScript.Runs.push("Test.ntj");
+
+	// Belt settings
+	CLConfig.Belt[0] = "hp";
+	CLConfig.Belt[1] = "mp";
+	CLConfig.Belt[2] = "rv";
+	CLConfig.Belt[3] = "rv";
+}

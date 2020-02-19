@@ -1,0 +1,170 @@
+ME.prototype = {
+    GetOptimalAttackPos : function (unit, distance, coll, walk) {
+        if (!unit || !unit.x || !unit.y) {
+            return false;
+        }
+
+		if (walk === undefined) {
+			walk = false;
+		}
+
+        if (distance < 4 && (!unit.hasOwnProperty("mode") || (unit.mode !== 0 && unit.mode !== 12))) {
+            //me.overhead("Short range");
+
+            if (walk) {
+                if (GetDistance(me, unit) > 8 || CheckCollision(me, unit, coll)) {
+                    CLMove.Walk(unit.x, unit.y);
+                }
+            } else {
+                CLMove.To(unit.areaid, unit.x, unit.y);
+            }
+
+            return !CLCollMap.checkColl(me, unit, coll);
+        }
+
+        var n, i, cx, cy, t,
+            coords = [],
+            fullDistance = distance,
+            name = unit.hasOwnProperty("name") ? unit.name : "",
+            angle = Math.round(Math.atan2(me.y - unit.y, me.x - unit.x) * 180 / Math.PI),
+            angles = [0, 15, -15, 30, -30, 45, -45, 60, -60, 75, -75, 90, -90, 135, -135, 180];
+
+        t = GetTickCount();
+
+        for (n = 0; n < 3; n += 1) {
+            if (n > 0) {
+                distance -= Math.floor(fullDistance / 3 - 1);
+            }
+
+            for (i = 0; i < angles.length; i += 1) {
+                cx = Math.round((Math.cos((angle + angles[i]) * Math.PI / 180)) * distance + unit.x);
+                cy = Math.round((Math.sin((angle + angles[i]) * Math.PI / 180)) * distance + unit.y);
+
+                if (CheckSpot(cx, cy, 0x1, false)) {
+                    coords.push({x: cx, y: cy});
+                }
+            }
+
+            if (coords.length > 0) {
+                coords.sort(Sort.units);
+
+                for (i = 0; i < coords.length; i += 1) {
+                    // Valid position found
+                    if (!CLCollMap.checkColl({x: coords[i].x, y: coords[i].y}, unit, coll, 1)) {
+                        switch (walk) {
+							case 1:
+								CLMove.Walk(coords[i].x, coords[i].y);
+								break;
+							case 2:
+								if (GetDistance(me, coords[i]) < 6 && !CLCollMap.checkColl(me, coords[i], 0x5)) {
+									CLMove.Walk(coords[i].x, coords[i].y);
+								} else {
+									CLMove.Walk(unit.areaid, coords[i].x, coords[i].y, 1);
+								}
+								break;
+							default:
+								CLMove.Walk(unit.areaid, coords[i].x, coords[i].y);
+								break;
+                        }
+
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }  
+}
+
+Unit.prototype = {
+    IsAttackable : function (){
+        if (!this) {
+            return false;
+        }
+
+        if (this.areaid !== me.areaid) {
+            return false;
+        }
+
+		if (typeof this.GetParent() === "object") { // My minion
+			return false;
+		}
+
+        if (this.type === 0 && this.mode !== 17) { // Player
+            return true;
+        }
+
+        if (this.hp === 0 || this.mode === 0 || this.mode === 12) { // Dead monster
+            return false;
+        }
+
+        if (this.GetStat(172) === 2) {    // Friendly monster/NPC
+            return false;
+        }
+
+        if (GetBaseStat(1, this.classid, "neverCount")) { // neverCount base stat - hydras, traps etc.
+            return false;
+        }
+
+        switch (this.classid) {
+        case 179: // An evil force - cow (lol)
+            return false;
+        case 543: // Baal in Throne
+            if (me.areaid === 131) {
+                return false;
+            }
+
+            break;
+        case 110: // Vultures
+        case 111:
+        case 112:
+        case 113:
+        case 114:
+        case 608:
+            if (this.mode === 8) { // Flying
+                return false;
+            }
+            break;
+        case 68: // Sand Maggots
+        case 69:
+        case 70:
+        case 71:
+        case 72:
+        case 679:
+        case 258: // Water Watchers
+        case 259:
+        case 260:
+        case 261:
+        case 262:
+        case 263:
+            if (this.mode === 14) { // Submerged/Burrowed
+                return false;
+            }
+            break;
+        }
+
+        return true;
+    }
+}
+
+Item.prototype.__defineGetter__('itemdesc', function () {
+    var a, c, sdata, ndata,
+		ldata = [],
+		split = this.itemdescript.split("\n");
+
+    //reverse line order
+    for (a = split.length - 1; a > -1; a -= 1) {
+        ldata.push(split[a]);
+	}
+
+    sdata = ldata.toString();
+
+    //replace all commas with newlines
+    ndata = sdata.replace(",", "\n");
+	
+    for (c = 0; c < _split.length; c += 1) {
+        ndata = ndata.replace(",", "\n");   
+	}		
+    return ndata;
+});

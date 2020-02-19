@@ -1,0 +1,209 @@
+var CLConfig = {
+	CreateConfig: true, // true will create a char config(default), false will not
+
+	Include: function (folder) {
+		var Default, ShortConfig, FullConfig, ConfigFolder, CreatedConfig, DefaultConfig,
+			Created = false;
+
+		if (folder === undefined) {
+			folder = "Configs";
+		}
+
+		switch(me.classid) {
+			case 0:
+				Default = "Config.Amazon";
+				break;
+			case 1:
+				Default = "Config.Sorceress";
+				break;
+			case 2:
+				Default = "Config.Necromancer";
+				break;
+			case 3:
+				Default = "Config.Paladin";
+				break;
+			case 4:
+				Default = "Config.Barbarian";
+				break;
+			case 5:
+				Default = "Config.Druid";
+				break;
+			case 6:
+				Default = "Config.Assassin";
+				break;
+		}
+
+		switch (me.playtype) {
+			case 0:
+				ConfigFolder = "SinglePlayer";
+				break;
+			case 1:
+				ConfigFolder = me.realm;
+				break;
+		}
+
+		if (folder !== "Configs") {
+			folder = folder + "/Configs/";
+		}
+
+		FullConfig = folder + "/" + ConfigFolder + "/" + Default + "." + me.name + ".ntl";
+		DefaultConfig = folder + "/Default Configs/" + Default + ".ntl";
+
+		if (!File.Exists(FullConfig) && this.CreateConfig) {
+			CreatedConfig = FileOpen(FullConfig, 1);
+			ShortConfig = FileOpen(DefaultConfig, 0);
+				
+			while (!ShortConfig.eof) {
+				CreatedConfig.WriteLine(ShortConfig.ReadLine());
+			}
+
+			CreatedConfig.Close();
+			ShortConfig.Close();
+			Created = File.Exists(FullConfig);
+		} else if (!File.Exists(FullConfig) && !this.CreateConfig) {
+			while (me.ingame) {
+				Print(COLOR_14 + "=============================================");
+				Print(COLOR_14 + "No Character Config Found For " + me.name);
+				Print(COLOR_14 + "To Auto Create Character Configs You Must");
+				Print(COLOR_14 + "Go To Common/Libs/CLConfig and set The");
+				Print(COLOR_14 + "CreateConfig Setting at the top to True");
+				Print(COLOR_14 + "==============================================");
+				Delay(Random(8000,11000));
+			}
+		}
+
+		if (Created) {
+			while (me.ingame) {
+				Print(COLOR_14 + "=============================================");
+				Print(COLOR_14 + "Character Config Created For " + me.name);
+				Print(COLOR_14 + "You Must Stop The Bot And Setup Your Config");
+				Print(COLOR_14 + "To Have Successful Runs With This Toon. Enjoy.");
+				Print(COLOR_14 + "==============================================");
+				Delay(Random(8000,11000));
+			}
+		} else {
+			try {
+				Include(FullConfig);
+				return true;
+			} catch (e1) {
+				Print("Failed to include char config");
+				return false;
+			}
+		}
+		return false;
+	},
+
+	// inner functions settings
+	MinTrapRange: 999,
+	MinBossTrapRange: 999,
+	NumTraps: 0,
+	NumBossTrap: 0,
+
+	// belt settings
+	Belt: [
+		"hp",
+		"hp",
+		"mp",
+		"mp"
+	],
+
+	// inventory settings
+	Columns: [
+		[1,1,1,1,1,1,1,1,1,1],
+		[1,1,1,1,1,1,1,1,1,1],
+		[1,1,1,1,1,1,1,1,1,1],
+		[1,1,1,1,1,1,1,1,1,1]
+	],
+
+	// cubing settings
+	Cubing: false,
+
+	// pickit settings
+	LogSoldItemQuality: 5,
+
+	// attack settings
+	AttackSkill: [],
+	ClearWeakerMobsFirst: false,
+	SkipClearingWeakerAreas: [],
+	HighMaxAttacks: 300,
+	HighMaxAttackAreas: [],
+	LowMaxAttacks: 20,
+	SkipRegularMonsters: false,
+	AreasToNotSkipImmunes: [],
+	TeleStomp: false,
+
+	// char specific attack settings
+	// druid attacks
+	TornadoDistance: 2, // range of where to attack from
+	CastPast: 2, // range to cast tornado past
+	// amazon attacks
+	FarCastAmazon: false,
+	FarCastRange: 20,
+	// necro attacks
+	Curse: [0, 0], // first curse is used on bosses, second is for all others
+	SkeletonArmy: 0, // Skeleton army size. (Set 0 to disable.)
+	MageArmy: 0, // Skeleton mage size. (Set 0 to disable.)
+	ReviveArmy: 0, // Revive army size. (Set 0 to disable.)
+	TeleStomp: false, // Teleport onto a boss or immune monster.
+	ActiveSummon: true, // Summon between attacks.
+	ExplodeCorpses: 74, // 0 = Don't Explode / 74 = Corpse Explosion / 83 = Poison Explosion
+	// paladin attacks
+	OnlySmiteStationary: false,
+	UseRedemptionHP: 50,
+	UseRedemptionMP: 50,
+	// barb attacks
+	UseFindItem: false,
+	FindItemRange: 20,
+	BuyPotsIfLackOfMana: true,
+	// sorc attacks
+	Dodge: false,
+	ChainLightOnLightImmunes: false,
+	Static: [],
+	StaticPercent: 60,
+	// sin attacks
+	UseTraps: true,
+	Venom: false,
+	TrapSet: [271,271,271,276,276],
+	ActBossTrapSet: [271,271,271,271,271],
+	TrapWaitTimeForImmune: 150,
+	TrapAttackPattern: "vertical",
+
+	// general settings
+	CheckChest: false,
+	CheckChestIds: [],
+	OpenChests: false,
+
+	// chicken settings
+	LifeChicken: 0,		//Percent Health Chicken - 0 to Disable
+	ManaChicken: 0,		//Percent Mana Chicken - 0 to Disable
+	ChickenStyle: 1,			//0 = Close D2, 1 = ExitGame;
+
+	// public settings
+	AutoParty: false,			//Auto Invite Others
+
+	// check safes
+	CheckSelfSafe: [],
+	CheckMercSafe: [],
+
+	// precast settings
+	//	sorc
+	SwitchCastSorc: false,
+	EnchantSelf: true,
+	ColdArmor: 40, // 40/frozen, 50/shiver, 60/chilling, 0/none
+	// necro
+	Golem: 75, // 75/clay, 85/blood, 94/fire, 0/none
+	// barb
+	BarbSwitch: false,
+	// druid
+	CastRaven: false,
+	SummonAnimal: 247, // 227/spirit, 237/dire, 247/grizzly, 0/none
+	Vine: "carrion", // 222/poison, 231/carrion, 241/solar, 0/none
+	// assassin
+	Shadow: 268, // 268/warrior, 279/master, 0/none
+	BOS: true,
+	Fade: true,
+	BladeShield: true,
+	CloakOfShadows: true,
+	// class specific settings
+	Telekinesis: false
+};

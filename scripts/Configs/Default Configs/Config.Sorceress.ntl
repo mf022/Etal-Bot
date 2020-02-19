@@ -1,0 +1,72 @@
+var Debug = true;
+
+function LoadConfig() {
+	CLScript.Runs.push("Test.ntj");
+
+	// chicken settings
+	CLConfig.LifeChicken = 0;	// Percent Health Chicken - 0 to Disable
+	CLConfig.ManaChicken = 0;	// Percent Mana Chicken - 0 to Disable
+	CLConfig.ChickenStyle = 1; // 0 = Close D2, 1 = ExitGame;
+
+	// check safes
+	CLConfig.CheckSelfSafe = [];
+	CLConfig.CheckMercSafe = [];
+
+	// public settings
+	CLConfig.AutoParty = false; // Auto Invite Others
+
+	// Belt settings
+	CLConfig.Belt[0] = "hp";
+	CLConfig.Belt[1] = "mp";
+	CLConfig.Belt[2] = "rv";
+	CLConfig.Belt[3] = "rv";
+
+	// invo settings
+	CLConfig.Columns[0] = [1,1,1,1,1,1,1,1,1,1];
+	CLConfig.Columns[1] = [1,1,1,1,1,1,1,1,1,1];
+	CLConfig.Columns[2] = [1,1,1,1,1,1,1,1,1,1];
+	CLConfig.Columns[3] = [1,1,1,1,1,1,1,1,1,1];
+
+	// cubing settings
+	CLConfig.Cubing = false;
+
+	// pickit settings
+	CLConfig.LogSoldItemQuality = 5;
+
+	// general settings
+	CLConfig.CheckChest = false;
+	CLConfig.CheckChestIds = [];
+	CLConfig.OpenChests = false;
+
+	// attack settings
+	CLConfig.AttackSkill[0] = -1; 	// First skill.
+	CLConfig.AttackSkill[1] = -1; 	// Primary skill to super unique/champion.
+	CLConfig.AttackSkill[2] = -1; 	// Primary untimed skill to super unique/champion.
+	CLConfig.AttackSkill[3] = -1; 	// Primary skill to others.
+	CLConfig.AttackSkill[4] = -1; 	// Primary untimed skill to others.
+	CLConfig.AttackSkill[5] = -1; 	// Secondary skill in case monster is immune to primary skill.
+	CLConfig.AttackSkill[6] = -1; 	// Secondary untimed skill.
+	CLConfig.AttackSkill[7] = -1; 	// Tertiary skill to everything else in case monster is immune to both primary and secondary.
+	CLConfig.AttackSkill[8] = -1; 	// Tertiary untimed skill.
+	CLConfig.AttackSkill[9] = -1; 	// Primary skill to boss (diablo/baal/meph/etc) Not immune to spells I guess.
+	CLConfig.AttackSkill[10] = -1; 	// Primary skill to baal this MUST be set if you do baal charged bolt works well here
+
+	// class specific attack settings
+	CLConfig.Dodge = true; // Dodge mobs while attacking
+	CLConfig.ChainLightOnLightImmunes = false; // true to cast cl on immune mobs
+	CLConfig.Static = []; // list of mob names to cast static on
+	CLConfig.StaticPercent = 60; // percent of life to cast static down to
+
+	CLConfig.ClearWeakerMobsFirst = false;
+	CLConfig.SkipClearingWeakerAreas = [];
+	CLConfig.HighMaxAttacks = 300;
+	CLConfig.HighMaxAttackAreas = [];
+	CLConfig.LowMaxAttacks = 20;
+	CLConfig.SkipRegularMonsters = false;
+	CLConfig.AreasToNotSkipImmunes = [];
+
+	// Precast settings
+	CLConfig.SwitchCastSorc = false;
+	CLConfig.EnchantSelf = true;
+	CLConfig.ColdArmor = 40; // 40/"frozen", 50/"shiver", 60/"chilling", 0/"none"
+}

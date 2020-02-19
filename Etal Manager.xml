@@ -1,0 +1,99 @@
+﻿<?xml version="1.0"?>
+<doc>
+<assembly>
+<name>
+Etal Manager
+</name>
+</assembly>
+<members>
+<member name="T:Etal_Manager.My.Resources.Resources">
+<summary>
+  A strongly-typed resource class, for looking up localized strings, etc.
+</summary>
+</member>
+<member name="P:Etal_Manager.My.Resources.Resources.ResourceManager">
+<summary>
+  Returns the cached ResourceManager instance used by this class.
+</summary>
+</member>
+<member name="P:Etal_Manager.My.Resources.Resources.Culture">
+<summary>
+  Overrides the current thread's CurrentUICulture property for all
+  resource lookups using this strongly typed resource class.
+</summary>
+</member>
+<member name="P:Etal_Manager.My.Resources.Resources.ArrowDown">
+<summary>
+  Looks up a localized resource of type System.Drawing.Bitmap.
+</summary>
+</member>
+<member name="P:Etal_Manager.My.Resources.Resources.ArrowUp">
+<summary>
+  Looks up a localized resource of type System.Drawing.Bitmap.
+</summary>
+</member>
+<member name="P:Etal_Manager.My.Resources.Resources.Etal_Manager">
+<summary>
+  Looks up a localized resource of type System.Byte[].
+</summary>
+</member>
+<member name="F:Etal_Manager.Module1.WM_COPYDATA">
+ <summary>
+ An application sends the WM_COPYDATA message to pass data to another 
+ application.
+ </summary>
+</member>
+<member name="M:Etal_Manager.PInvoke.Extensions.HasAttribute(System.Reflection.ICustomAttributeProvider,System.Type)">
+ <summary>
+ Test for the presence of an attribute on a specified Type
+ </summary>
+ <param name="t">The Type to test</param>
+ <param name="attr">The type of the attribute to test for</param>
+ <returns>True if the attribute is present, otherwise false</returns>
+</member>
+<member name="M:Etal_Manager.PInvoke.Extensions.HasAttribute(System.Reflection.ICustomAttributeProvider,System.Type,System.Boolean)">
+ <summary>
+ Test for the presence of an attribute on a specified Type
+ </summary>
+ <param name="t">The Type to test</param>
+ <param name="attr">The type of the attribute to test for</param>
+ <param name="inherit">Whether or not to examine the inherited attributes for the specified attribute</param>
+ <returns>True if the attribute is present, otherwise false</returns>
+</member>
+<member name="M:Etal_Manager.PInvoke.Extensions.Compose(System.String,System.Object[])">
+ <summary>
+ Calls String.Format with the current string as the formatting string
+ </summary>
+ <returns>The formatted string</returns>
+</member>
+<member name="M:Etal_Manager.NativeMethod.SendMessage(System.IntPtr,System.Int32,System.IntPtr,Etal_Manager.Module1.COPYDATASTRUCT@)">
+ <summary>
+ Sends the specified message to a window or windows. The SendMessage 
+ function calls the window procedure for the specified window and does 
+ not return until the window procedure has processed the message. 
+ </summary>
+ <param name="hWnd">
+ Handle to the window whose window procedure will receive the message.
+ </param>
+ <param name="Msg">Specifies the message to be sent.</param>
+ <param name="wParam">
+ Specifies additional message-specific information.
+ </param>
+ <param name="lParam">
+ Specifies additional message-specific information.
+ </param>
+ <returns></returns>
+</member>
+<member name="M:Etal_Manager.NativeMethod.FindWindow(System.String,System.String)">
+ <summary>
+ The FindWindow function retrieves a handle to the top-level window 
+ whose class name and window name match the specified strings. This 
+ function does not search child windows. This function does not 
+ perform a case-sensitive search.
+ </summary>
+ <param name="lpClassName">Class name</param>
+ <param name="lpWindowName">Window caption</param>
+ <returns></returns>
+</member>
+</members>
+</doc>

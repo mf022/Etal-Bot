@@ -1,0 +1,142 @@
+var CLToon = {
+	DetectAttackPattern: function () {
+		return this.AttackPatternInt();
+	},
+
+	Attack: function (target, firstorder) {
+		return this.AttackInt(target, firstorder);
+	},
+
+	AttackPatternInt: function () {
+		var i, maxindex, maxskill,
+			avgskilllevel = [];
+
+		avgskilllevel[0] = parseInt((me.GetSkill(112, false) + me.GetSkill(108, false) + me.GetSkill(115, false)) / 3);
+		avgskilllevel[1] = parseInt((me.GetSkill(106, false) + me.GetSkill(96, false)) / 2);
+		avgskilllevel[2] = parseInt((me.GetSkill(121, false) + me.GetSkill(101, false) + me.GetSkill(118, false)) / 3);
+
+		maxindex = -1;
+		maxskill = 0;
+
+		for (i = 0; i < avgskilllevel.length; i += 1) {
+			if (avgskilllevel[i] > maxskill) {
+				maxindex = i;
+				maxskill = avgskilllevel[i];
+			}
+		}
+
+		switch (maxindex) {
+			case 0:
+				// Blessed Hammer
+				CLConfig.AttackSkill[1] = 112;
+				CLConfig.AttackSkill[2] = 113;
+				CLConfig.AttackSkill[3] = 112;
+				CLConfig.AttackSkill[4] = 113;
+				break;
+			case 1:
+				// Zeal
+				CLConfig.AttackSkill[1] = 106;
+				CLConfig.AttackSkill[2] = 122;
+				CLConfig.AttackSkill[3] = 106;
+				CLConfig.AttackSkill[4] = 122;
+				break;
+			case 2:
+				// Fist of the Heavens
+				CLConfig.AttackSkill[1] = 121;
+				CLConfig.AttackSkill[2] = 123;
+				CLConfig.AttackSkill[3] = 121;
+				CLConfig.AttackSkill[4] = 123;
+				break;
+		}
+
+		return (CLConfig.AttackSkill[1] && CLConfig.AttackSkill[3]);
+	},
+
+	AttackInt: function (target, firstorder) {
+		var pos, primaryindex, attackIndex;
+
+		//if ((CLTMGR_CheckCurse(CLConfig.CheckSelfSafe, CLConfig.CheckMercSafe, true)) || (me.hp <= parseInt(me.hpmax * CLConfig.TPChicken,10) / 100)) {
+			//if (!CLTMGR_VisitTown()) { return 0; }
+		//}
+		//_merc = CLC_GetMerc();
+		//if(_merc){
+			//if ((CLTMGR_CheckCurse(CLConfig.CheckSelfSafe, CLConfig.CheckMercSafe, true)) || (_merc.hp <= parseInt(_merc.hpmax * CLConfig.MercTPChicken,10) / 100)) {
+				//if (!CLTMGR_VisitTown()) { return 0; }
+			//}
+		//}
+
+		//Check if we have needed arrows or bolts
+		if(Ranged){
+			CLAttack.HaveArrows();
+		}
+
+		if (firstorder && CLConfig.AttackSkill[0] > -1 && CLAttack.GetResistance(target, SkillDamage[0]) < 100) {
+			if (GetDistance(me, target) > SkillRange[0] || !CheckCollision(me, target, 4)) {
+				pos = me.GetOptimalAttackPos(target.areaid, target.x, target.y, SkillRange[0], 4);
+
+				if (pos) {
+					CLMove.To(target.areaid, pos[0], pos[1]);
+				}
+			}
+
+			if (CLConfig.AttackSkill[index + 1] > -1) {
+				CLSkill.Put(CLConfig.AttackSkill[index + 1], NTC_HAND_RIGHT);
+			}
+
+			if (!CLSkill.Cast(CLConfig.AttackSkill[0], NTC_HAND_LEFT, target.x, target.y)) {
+				return 2;
+			}
+
+			return 3;
+		}
+
+		primaryindex = (target.spectype & 0x0A) ? 1 : 3;
+
+		if (CLConfig.OnlySmiteStationary && CLConfig.AttackSkill[1] === 97 && GetBaseStat("monstats2.txt", target.classid, 56) === 1) {
+			primaryindex = 3;
+		}
+
+		attackIndex = CLAttack.GetAttackType(target, primaryindex, 100, 100, 100);
+
+		if (CLConfig.AttackSkill[attackIndex] > -1) {
+			if (SkillRange[attackIndex] < 4 && !CheckCollision(target.areaid, target.x, target.y, 1)) {
+				return 1;
+			}
+
+			if (!this.CastSkillInt(attackIndex, target)) {
+				return 2;
+			}
+
+			return 3;
+		}
+		return 1;
+	},
+
+	CastSkillInt: function (index, target) {
+		var pos;
+
+		if (CLConfig.AttackSkill[index] === 112) {
+			if (me.x - target.x < 1 || me.x - target.x > 2 || me.y - target.y < 1 || me.y - target.y > 2) {
+				if (CheckCollision(target.areaid, target.x + 2, target.y + 2, 1)) {
+					CLMove.To(target.areaid, target.x + 2, target.y + 2);
+				} else if (me.x - target.x < -4 || me.x - target.x > 2 || me.y - target.y < 0 || me.y - target.y > 2) {
+					CLMove.To(target.areaid, target.x - 4, target.y);
+				}
+			}
+		} else {
+			if (GetDistance(me, target) > SkillRange[index] || !CheckCollision(me, target, 4)) {
+				pos = me.GetOptimalAttackPos(target.areaid, target.x, target.y, SkillRange[index], 4);
+
+				if (pos) {
+					CLMove.To(target.areaid, pos[0], pos[1]);
+				}
+			}
+		}
+
+		if (CLConfig.AttackSkill[index + 1] > -1) {
+			CLSkill.Put(CLConfig.AttackSkill[index + 1], NTC_HAND_RIGHT);
+		}
+
+		return CLSkill.Cast(CLConfig.AttackSkill[index], NTC_HAND_LEFT, target.x, target.y);
+	}
+};

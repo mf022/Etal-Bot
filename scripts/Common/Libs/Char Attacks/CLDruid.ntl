@@ -1,0 +1,195 @@
+var CLToon = {
+	DetectAttackPattern: function () {
+		return this.AttackPatternInt();
+	},
+
+	Attack: function (target, firstorder) {
+		return this.AttackInt(target, firstorder);
+	},
+
+	AttackPatternInt: function () {
+		var i, maxindex, maxskill,
+			avgskilllevel = [];
+
+		avgskilllevel[0] = me.GetSkill(245, false);
+		maxindex = -1;
+		maxskill = 0;
+
+		for (i = 0; i < avgskilllevel.length; i += 1) {
+			if (avgskilllevel[i] > maxskill) {
+				maxindex = i;
+				maxskill = avgskilllevel[i];
+			}
+		}
+
+		switch (maxindex) {
+		case 0:
+			//
+			CLConfig.AttackSkill[1] = 245;
+			CLConfig.AttackSkill[2] = 245;
+			CLConfig.AttackSkill[3] = 245;
+			CLConfig.AttackSkill[4] = 245;
+			CLConfig.AttackSkill[5] = 245;
+			CLConfig.AttackSkill[6] = 245;
+			break;
+		}
+
+		return (CLConfig.AttackSkill[1] && CLConfig.AttackSkill[3]);
+	},
+
+	AttackInt: function (target, firstorder) {
+		var pos, primaryindex, attackIndex;
+
+		//if ((CLTMGR_CheckCurse(CLConfig.CheckSelfSafe, CLConfig.CheckMercSafe, true)) || (me.hp <= parseInt(me.hpmax * CLConfig.TPChicken,10) / 100)) {
+			//if (!CLTMGR_VisitTown()) { return 0; }
+		//}
+		//_merc = CLC_GetMerc();
+		//if(_merc){
+			//if ((CLTMGR_CheckCurse(CLConfig.CheckSelfSafe, CLConfig.CheckMercSafe, true)) || (_merc.hp <= parseInt(_merc.hpmax * CLConfig.MercTPChicken,10) / 100)) {
+				//if (!CLTMGR_VisitTown()) { return 0; }
+			//}
+		//}
+
+		//Check if we have needed arrows or bolts
+		if(Ranged){
+			CLAttack.HaveArrows();
+		}
+
+		if (firstorder && CLConfig.AttackSkill[0] > -1 && CLAttack.GetResistance(target, SkillDamage[0]) < 100) {
+			if (GetDistance(me, target) > SkillRange[0] || !CheckCollision(me, target, 4)) {
+				pos = [target.x, target.y];//me.GetOptimalAttackPos(target.areaid, target.x, target.y, 3, 4);
+
+				if (pos) {
+					CLMove.To(target.areaid, pos[0], pos[1]);
+				}
+			}
+
+			if (!CLSkill.Cast(CLConfig.AttackSkill[0], SkillHand[0], target)) {
+				return 2;
+			}
+
+			return 3;
+		}
+
+
+		primaryindex = (target.spectype & 0x0A) ? 1 : 3;
+		attackIndex = CLAttack.GetAttackType(target, primaryindex, 91, 81, 81);
+
+		if (me.GetSkill(245, true) > 1) {
+			if (target.name === "Andariel" || target.name === "Baal" || target.name === "Mephisto" || target.name === "Diablo") {
+				if (!this.CastSkillIntNear(primaryindex, target)) {
+					return 2;
+				}
+			}
+
+			return 3;
+		}
+
+
+		if (CLConfig.AttackSkill[attackIndex] > -1) {
+			if (SkillRange[attackIndex] < 4 && !CheckCollision(target.areaid, target.x, target.y, 1)) {
+				return 1;
+			}
+
+			if (!this.CastSkillInt(attackIndex, target)) {
+				return 2;
+			}
+
+			return 3;
+		}
+
+		if (CLAttack.GetResistance(target, SkillDamage[primaryindex]) < 100 || (primaryindex == 1 && CLCommon.GetMerc())) {
+			if (!this.CastSkillInt(primaryindex, target)) {
+				return 2;
+			}
+
+			return 3;
+		}
+
+		return 1;
+	},
+
+	CastSkillIntNear: function (index, target) {
+		var pos, castx, casty;
+
+		if (CLConfig.AttackSkill[index] === 245) {
+			if (GetDistance(me, target) > SkillRange[index] || !CheckCollision(me, target, 4)) {
+				pos = [target.x, target.y];//me.GetOptimalAttackPos(target.areaid, target.x, target.y, 3, 5);
+
+				if (pos) {
+					CLMove.To(target.areaid, pos[0], pos[1]);
+				}
+			}
+
+			castx = target.x > me.x ? target.x + CLConfig.CastPast : target.x - CLConfig.CastPast;
+			casty = target.y > me.y ? target.y + CLConfig.CastPast : target.y - CLConfig.CastPast;
+
+			return CLSkill.Cast(CLConfig.AttackSkill[index], SkillHand[index], castx, casty);
+		}
+
+		if (CLConfig.AttackSkill[index + 1] > -1 && CLConfig.AttackSkill[index] !== 245) {
+			if (GetDistance(me, target) > SkillRange[index] || !CheckCollision(me, target, 4)) {
+				pos = [target.x, target.y];//me.GetOptimalAttackPos(target.areaid, target.x, target.y, 3, 4);
+
+				if (pos) {
+					CLMove.To(target.areaid, pos[0], pos[1]);
+				}
+
+			}
+
+			return CLSkill.Cast(CLConfig.AttackSkill[index + 1], SkillHand[index + 1], target);
+		}
+	},
+
+	CastSkillInt: function (index, target) {
+		var pos, castx, casty;
+
+		if ((target.name === "Mephisto" || target.name === "Andariel" || target.name === "Duriel" || target.name === "Diablo" || target.name === "Baal") && CLConfig.AttackSkill[9] > -1) {
+			index = 9;
+		}
+		
+		if (CLConfig.AttackSkill[index] === 245) {
+			if (GetDistance(me, target) > SkillRange[index] || !CheckCollision(me, target, 4)) {
+				pos = [target.x, target.y];//me.GetOptimalAttackPos(target.areaid, target.x, target.y, SkillRange[index], 5);
+
+				if (pos) {
+					CLMove.To(target.areaid, pos[0], pos[1]);
+				}
+			}
+
+			castx = target.x > me.x ? target.x + CLConfig.CastPast : target.x - CLConfig.CastPast;
+			casty = target.y > me.y ? target.y + CLConfig.CastPast : target.y - CLConfig.CastPast;
+
+			return CLSkill.Cast(CLConfig.AttackSkill[index], SkillHand[index], castx, casty);
+		}
+
+
+		if (GetDistance(me, target) > SkillRange[index] || !CheckCollision(me, target, 4)) {
+			pos = [target.x, target.y];//me.GetOptimalAttackPos(target.areaid, target.x, target.y, SkillRange[index], 4);
+
+			if (pos) {
+				CLMove.To(target.areaid, pos[0], pos[1]);
+			}
+		}
+
+		if (!me.GetState(139)) {
+			CLSkill.Cast(223, NTC_HAND_RIGHT); // Werewolf
+		} else if (!me.GetState(140)) {
+			CLSkill.Cast(228, NTC_HAND_RIGHT); // Werebear   
+		}
+
+		return CLSkill.Cast(CLConfig.AttackSkill[index], SkillHand[index], target);
+
+		if (CLConfig.AttackSkill[index + 1] > -1) {
+			if (GetDistance(me, target) > SkillRange[index + 1] || !CheckCollision(me, target, 4)) {
+				pos = [target.x, target.y];//me.GetOptimalAttackPos(target.areaid, target.x, target.y, SkillRange[index + 1], 4);
+
+				if (pos) {
+					CLMove.To(target.areaid, pos[0], pos[1]);
+				}
+			}
+
+			return CLSkill.Cast(CLConfig.AttackSkill[index + 1], SkillHand[index + 1], target);
+		}
+	}
+};

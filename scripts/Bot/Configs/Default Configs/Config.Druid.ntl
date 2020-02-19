@@ -1,0 +1,15 @@
+var Debug = true;
+
+function LoadConfig() {
+	CLScript.Runs.push("Test.ntj");
+
+	// Belt settings
+	CLConfig.Belt[0] = "hp";
+	CLConfig.Belt[1] = "mp";
+	CLConfig.Belt[2] = "rv";
+	CLConfig.Belt[3] = "rv";
+
+	// Precast settings
+	CLConfig.SummonAnimal = 247; // 227/"spirit", 237/"dire", 247/"grizzly", 0/"none"
+	CLConfig.Vine = "carrion"; // 222/"poison", 231/"carrion", 241/"solar", 0/"none"
+}

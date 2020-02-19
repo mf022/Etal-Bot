@@ -1,0 +1,112 @@
+function NTMain(){
+	var i;
+
+	Include("Common/Libs/CLCommon.ntl");
+	CLCommon.LoadLibs();
+	CLConfig.Include();
+	LoadConfig();
+
+	CLAttack.Initialize();
+
+	CLTracker.Create();
+	CLTracker.TrackMe();
+
+	// act 1 test
+	//CLMove.Location("Waypoint");
+	//CLMove.TakeWaypoint(1);
+	//CLMove.Location("Akara");
+	//CLMove.Location("Gheed");
+	//CLMove.Location("Charsi");
+	//CLMove.Location("Stash");
+	//CLMove.Location("Portalspot");
+	//CLMove.Location("Waypoint");
+
+	// act 2 test
+	//CLMove.Location("Waypoint");
+	//CLMove.TakeWaypoint(40);
+	//CLMove.Location("Stash");
+	//CLMove.Location("Drognan");
+	//CLMove.Location("Meshif");
+	//CLMove.Location("Lysander");
+	//CLMove.Location("Waypoint");
+	//CLMove.TakeWaypoint(75);
+
+	// act 3 test
+	//CLMove.Location("Ormus");
+	//CLMove.Location("Stash");
+	//CLMove.Location("Alkor");
+	//CLMove.Location("Meshif");
+	//CLMove.Location("Waypoint");
+	//CLMove.TakeWaypoint(103);
+
+	// act 4 test
+	//CLMove.Location("Jamella");
+	//CLMove.Location("Stash");
+	//CLMove.Location("Halbu");
+	//CLMove.Location("Tyrael");
+	//CLMove.Location("Portalspot");
+	//CLMove.Location("Waypoint");
+	//CLMove.TakeWaypoint(109);
+
+	// act 5 test
+	//CLMove.Location("Qual-kehk");
+	//CLMove.Location("Cain");
+	//CLMove.Location("Malah");
+	//CLMove.Location("Larzuk");
+	//CLMove.Location("Portalspot");
+	//CLMove.Location("Waypoint");
+
+	CLTownManager.Restock();
+
+	//CLMove.Location("Waypoint");
+	//CLMove.TakeWaypoint(129);
+	//CLPrecast.Do();
+
+	//for (i = 0; i < 3; i += 1){
+		//CLMove.ToStair(129+i);
+		//Delay(500);
+		//CLMove.TakeStair(129+i);
+	//}
+
+	//CLAttack.ClearLevel();
+	//CLMove.MakeTP();
+	//CLMove.TakePortal("BluePortal");
+
+	CLMove.Location("Waypoint");
+	CLMove.TakeWaypoint(107);
+	CLPrecast.Do();
+
+	CLMove.To(108, 7790, 5544);
+	CLAttack.ClearPosition(30);
+
+	var FrontToStarX = [7792,7794,7791,7777,7813,7769,7782,7802,7819,7768,7770,7791,7819, 7804];
+	var FrontToStarY = [5564,5529,5495,5486,5486,5445,5421,5421,5446,5390,5355,5355,5376, 5340];
+	for (var i = 0; i < FrontToStarX.length; i += 1) {
+		CLMove.To(108, FrontToStarX[i], FrontToStarY[i]);
+		CLAttack.ClearPosition(30);
+	}
+
+	CLMove.MakeTP();
+	CLMove.TakePortal("BluePortal");
+
+	//CLMove.Location("Waypoint");
+	//CLMove.TakeWaypoint(3);
+	//CLDevTools.LogFunctions();
+	Delay(2000);
+	CLScript.SendMsg("CScriptControl.ntj", "SCRIPT_END");
+}
+
+function BuildMobs() {
+	var i, mobs;
+
+	mobs = GetUnits(NTC_UNIT_MONSTER);
+
+	if (!mobs.length) {
+		Print("No mobs found");
+	}
+
+	for (i in mobs) {
+		Print(mobs[i].name + ": " + mobs[i].type);
+		CLFile.Log("mobs.txt", mobs[i].name + "\n");
+	}
+}

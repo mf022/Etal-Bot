@@ -1,0 +1,376 @@
+var wpsDontHave = [];
+
+var CLVoyage = {
+	To: function (dest) {
+		var  ClosestWp,
+			area = WpAreas.indexOf(dest);
+		
+		ClosestWp = this.GetPrevious(area);
+
+		if (ClosestWp === -1) {
+			return false;
+		}
+		
+		me.TakeWaypoint(WpAreas[ClosestWp]);
+		Delay(200);
+		
+		if (GetUIState(0x14)) {
+			SetUIState(0x14, false);
+		}
+		
+		while (me.areaid !== dest) {	
+			if (!this.GetNextWp(dest)) {
+				return false;
+			}
+			
+			currentArea = WpAreas.indexOf(me.areaid);
+			if (currentArea !== -1) {
+				this.GetWp(WpIds[currentArea]);
+			}
+		}
+	},
+	
+	GetWp: function (wpid) {
+		var unit = CLCommon.FindUnit(NTC_UNIT_OBJECT, wpid);
+		
+		CLMove.PresetUnit(me.areaid, NTC_UNIT_OBJECT, wpid);
+
+		if (unit){
+			ClickMap(0, 0, unit);
+			Delay(200);			
+		}
+	},
+	
+	GetPrevious: function (area) {
+		var i;
+		for (i = area; i > 0; i -= 1) {
+			if (GetWaypoint(i)) {
+				return i;				
+			}			
+		}
+		return -1;		
+	},
+	
+	GetNextWp: function (area) {
+		var destArea = 0;
+
+		Print("Debug - GetNextWp " + area);
+
+		switch (me.areaid) {
+			
+		case 1: 
+			if (NTVT_ExitRogueEncampment()) {
+				return true;
+			}			// ROGUE_ENCAMPMENT(1) to BLOOD_MOOR(2) [special]
+			break;
+		case 2: 
+			if (NTVT_MoveToClosestPreSetUnit(3)) {
+				return true;
+			} 		// BLOOD_MOOR(2) to COLD_PLAINS(3) [presetunit]
+			break;
+		case 3: 
+			if (NTVT_MoveToClosestPreSetUnit(4)) {
+				return true;
+			} 		// COLD_PLAINS(3) to STONY_FIELD(4) [presetunit]
+			break;
+		case 4: 
+			if (this.MoveToStairs(4, 10)) {
+				return true;
+			} 		// STONY_FIELD(4) to UNDERGROUND_PASSAGE_LEVEL_1(10) [stairs]
+			break;
+		case 10: 
+			if (this.MoveToStairs(10, 5)) {
+				return true;
+			}		// UNDERGROUND_PASSAGE_LEVEL_1(10)  to DARK_WOOD(5) [stairs]
+			break;
+		case 5: 
+			if (NTVT_MoveToClosestPreSetUnit(6)) {
+				return true;
+			} 		// DARK_WOOD(5) to BLACK_MARSH(6) [presetunit]
+			break;
+		case 6:
+			if (NTVT_MoveToClosestPreSetUnit(7)) {
+				return true;
+			} 		// BLACK_MARSH(6) to TAMOE_HIGHLAND(7) [presetunit]
+			break;
+		case 7: 
+			if (NTVT_MoveToClosestPreSetUnit(26)) {
+				return true;
+			}   	// TAMOE_HIGHLAND(7) to MONASTERY_GATE(26) [presetunit]
+			break;
+		case 26: 	
+			if (NTVT_MoveToClosestPreSetUnit(27)) {
+				return true;
+			}		// MONASTERY_GATE(26)  to OUTER_CLOISTER(27) [presetunit]
+			break;
+		case 27: 
+			if (NTVT_MoveToClosestPreSetUnit(28)) {
+				return true;
+			}	// OUTER_CLOISTER(27) to BARRACKS(28) [presetunit]
+			break;
+		case 28:
+			if (this.MoveToStairs(28, 29)) {
+				return true;
+			} 		// BARRACKS(28) to JAIL_LEVEL_1(29) [stairs]
+			break;
+		case 29: 
+			if (this.MoveToStairs(29, 30)) {
+				return true;
+			} 		// JAIL_LEVEL_1(29) to JAIL_LEVEL_2(30) [stairs]
+			break;
+		case 30: 
+			if (this.MoveToStairs(30, 31)) {
+				return true;
+			} 		// JAIL_LEVEL_2(30) to JAIL_LEVEL_3(31) [stairs]
+			break;
+		case 31: 
+			if (this.MoveToStairs(31, 32)) {
+				return true;
+			} 		// JAIL_LEVEL_3(31) to INNER_CLOISTER(32) [stairs]
+			break;
+		case 32: 
+			if (NTVT_MoveToClosestPreSetUnit(33)) {
+				return true;
+			}	// INNER_CLOISTER(32) to CATHEDRAL(33) [presetunit]
+			break;
+		case 33: 
+			if (this.MoveToStairs(33, 34)) {
+				return true;
+			} 		// CATHEDRAL(33) to CATACOMBS_LEVEL_1(34) [stairs]
+			break;
+		case 34: 
+			if (this.MoveToStairs(34, 35)) {
+				return true;
+			} 		// CATACOMBS_LEVEL_1(34) to CATACOMBS_LEVEL_2(35) [stairs]
+			break;
+		
+		// act 2
+		case 40: 
+			if (destArea === 48) {
+				if(NTVT_ToSewers()) {
+					return true;
+				}			// LUT_GHOLEIN(40) to SEWERS_LEVEL_1(47) [special]
+			}
+
+			if (destArea === 52 || destArea === 74 || destArea === 46) { // 52, 74, 46
+				if (NTVT_ToHarems()) {
+					return true;
+				}		// LUT_GHOLEIN(40) to HAREM_LEVEL_1(50) [special]
+			}
+
+			if (NTTM_OutOfTown2()) {
+				return true;
+			}	// LUT_GHOLEIN(40) to ROCKY_WASTE(41) [special]
+			break;
+		case 47:
+			if (this.MoveToStairs(47, 48)) {
+				return true;
+			}	// SEWERS_LEVEL_1(47) to SEWERS_LEVEL_2(48) [stairs]
+			break;
+		case 50: 
+			if (this.MoveToStairs(50, 51)) {
+				return true;
+			} 	// HAREM_LEVEL_1(50) to HAREM_LEVEL_2(51) [stairs]
+			break;
+		case 51: 
+			if (this.MoveToStairs(51, 52)) {
+				return true;
+			} 	// HAREM_LEVEL_2(51) to PALACE_CELLAR_LEVEL_1(52)[stairs]
+			break;
+		case 52: 
+			if (this.MoveToStairs(52, 53)) {
+				return true;
+			} 	// PALACE_CELLAR_LEVEL_1(52) to PALACE_CELLAR_LEVEL_2(53) [stairs]
+			break;
+		case 53: 
+			if (this.MoveToStairs(53, 54)) {
+				return true;
+			} 	// PALACE_CELLAR_LEVEL_2(53) to PALACE_CELLAR_LEVEL_3(54) [stairs]
+			break;
+		case 54: 
+			if (NTVT_ToArcane()) {
+				return true;
+			} 			// PALACE_CELLAR_LEVEL_3(53) to ARCANE_SANCTUARY(74) [special]
+			break;
+		case 74: 
+			if (NTVT_ToCanyonOfTheMagi()) {
+				return true;
+			} 			// ARCANE_SANCTUARY(74) to CANYON_OF_THE_MAGI(46) [special]
+			break;
+		case 41: 
+			if (NTVT_MoveToClosestPreSetUnit(42)) {
+				return true;
+			}		// ROCKY_WASTE(41) to DRY_HILLS(42) [presetunit]
+			break;
+		case 42: 
+			if (destArea === 57) {
+				if (this.MoveToStairs(42, 56)) {
+					return true;
+				}	// DRY_HILLS(42) to HALLS_OF_THE_DEAD_LEVEL_1(56) [stairs]
+			} else {
+				if (NTVT_MoveToClosestPreSetUnit(43)) {
+					return true;
+				}		//DRY_HILLS(42) to FAR_OASIS(43) [presetunit]
+			}
+			break;
+		case 56: 
+			if (this.MoveToStairs(56, 57)) {
+				return true;
+			} 	// HALLS_OF_THE_DEAD_LEVEL_1(56) to HALLS_OF_THE_DEAD_LEVEL_2(57) [stairs]
+			break;
+		case 43: 
+			if (NTVT_MoveToClosestPreSetUnit(44)) {
+				return true;
+			}	 	// FAR_OASIS(43) to LOST_CITY(44) [presetunit]
+			break;
+		//case 44: // LOST_CITY(44) NOT NEEDED ???
+
+		//act 3
+		case 75:
+			if (!NTTM_TownMove("exit")) {
+				return false;
+			}
+
+			if (NTVT_MoveToClosestPreSetUnit(76)) {
+				return true;
+			}	 // KURAST_DOCKTOWN(75) to SPIDER_FOREST(76) [presetunit]
+			break;
+		case 76:
+			if (NTVT_MoveToClosestPreSetUnit(77)) {
+				return true;
+			}	 // SPIDER_FOREST(76) to GREAT_MARSH(77) [presetunit]
+			break;
+		case 77:
+			if (NTVT_MoveToClosestPreSetUnit(78)) {
+				return true;
+			}	 // GREAT_MARSH(77) to FLAYER_JUNGLE(78) [presetunit]
+			break;
+		case 78:
+			if (NTVT_MoveToClosestPreSetUnit(79)) {
+				return true;
+			}	 // FLAYER_JUNGLE(78) to LOWER_KURAST(79) [presetunit]
+			break;
+		case 79:
+			if (NTVT_MoveToClosestPreSetUnit(80)) {
+				return true;
+			}	 // LOWER_KURAST(79) to KURAST_BAZAAR(80) [presetunit]
+			break;
+		case 80:
+			if (NTVT_MoveToClosestPreSetUnit(81)) {
+				return true;
+			}	 // KURAST_BAZAAR(80) to UPPER_KURAST(81) [presetunit]
+			break;
+		case 81:
+			if (NTVT_MoveToClosestPreSetUnit(82)) {
+				return true;
+			}	 // UPPER_KURAST(81) to KURAST_CAUSEWAY(82) [presetunit]
+			break;
+		case 82:
+			if (NTVT_MoveToClosestPreSetUnit(83)) {
+				return true;
+			}	 // KURAST_CAUSEWAY(82) to TRAVINCAL(83) [preset unit]
+			break;
+		case 83: 
+			if (this.MoveToStairs(83, 100)) {
+				return true;
+			} 	// TRAVINCAL(83) to DURANCE_OF_HATE_LEVEL_1(100) [stairs]
+			break;
+		case 100: 
+			if (this.MoveToStairs(100, 101)) {
+				return true;
+			} 	// DURANCE_OF_HATE_LEVEL_1(100) to DURANCE_OF_HATE_LEVEL_2(101) [stairs]
+			break;
+		
+		// act 4
+		case 103:
+			if (!NTTM_TownMove("exit")) {
+				return false;
+			}
+
+			if (NTVT_MoveToClosestPreSetUnit(104)) {
+				return true;
+			}	 // THE_PANDEMONIUM_FORTRESS(103) to OUTER_STEPPES)(104) [preset unit]
+			break;
+		case 104:
+			if (NTVT_MoveToClosestPreSetUnit(105)) {
+				return true;
+			}	 // OUTER_STEPPES)(104) to PLAINS_OF_DESPAIR(105) [preset unit]
+			break;
+		case 105:
+			if (NTVT_MoveToClosestPreSetUnit(106)) {
+				return true;
+			}	 // PLAINS_OF_DESPAIR(105) to CITY_OF_THE_DAMNED(106) [preset unit]
+			break;
+		case 106: 
+			if (this.MoveToStairs(106, 107)) {
+				return true;
+			} 		// CITY_OF_THE_DAMNED(106) to RIVER_OF_FLAME(107) [stairs]
+			break;
+		
+		// act 5
+		case 109:
+			if (NTVT_ExitHarrogath()) {
+				return true;
+			}  // HARROGATH(109) to BLOODY_FOOTHILLS(110) [special]
+			break;
+		case 110:
+			if (NTVT_MoveToClosestPreSetUnit(111)) {
+				return true;
+			}	 // BLOODY_FOOTHILLS(110) to FRIGID_HIGHLANDS(111) [preset unit]
+			break;
+		case 111:
+			if (NTVT_MoveToClosestPreSetUnit(112)) {
+				return true;
+			}	 // FRIGID_HIGHLANDS(111) to ARREAT_PLATEAU(112) [preset unit]
+			break;
+		case 112:
+			if (this.MoveToStairs(112, 113)) {
+				return true;
+			}	 // ARREAT_PLATEAU(112) to CRYSTALIZED_CAVERN_LEVEL_1(113) [stairs]
+			break;
+		case 113:
+			if (this.MoveToStairs(113, 115)) {
+				return true;
+			}	 // CRYSTALIZED_CAVERN_LEVEL_1(113) to GlacialTrail(115) [stairs]
+			break;
+		case 115:
+			if (this.MoveToStairs(115, 117)) {
+				return true;
+			}	// GlacialTrail(115) to FrozenTundra(117) [stairs]
+			break;
+		case 117:
+			if (this.MoveToStairs(117, 118)) {
+				return true;
+			}	// FrozenTundra(117) to AncientsWay(118)[stairs]
+			break;
+		case 118:
+			if (this.MoveToStairs(118, 120)) {
+				return true;
+			}	// AncientsWay(118) to ArreatSummit(120)[stairs]
+			break;
+		case 120:
+			if (this.MoveToStairs(120, 128)) {
+				return true;
+			}	// ArreatSummit(120) to WorldstoneKeepLevel1(128) [stairs]
+			break;
+		case 128:
+			if (this.MoveToStairs(128, 129)) {
+				return true;
+			}	// WorldstoneKeepLevel1(128) to WorldstoneKeepLevel2(129)[stairs]
+			break;
+		}
+		return false;
+	},
+	
+	
+	MoveToStairs: function (StartArea, NextArea) {
+		if (!CLMove.ToStair(me.areaid, NextArea)) {
+			Print("start = " + StartArea + "  stair = " + NextArea);
+			return false;
+		}
+		if (!CLMove.TakeStair(NextArea)) {
+			return false;
+		}
+		return true;
+	}
+};

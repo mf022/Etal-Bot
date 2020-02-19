@@ -1,0 +1,136 @@
+var exitlocs = [];
+
+function NTMain(){
+	var i;
+
+	Include("Common/Libs/CLCommon.ntl");
+	CLCommon.LoadLibs();
+	CLConfig.Include();
+	LoadConfig();
+
+	CLTracker.Create();
+	CLTracker.TrackMe();
+
+	//CLMove.Town("Waypoint");
+	//CLMove.TakeWaypoint(103);
+
+	//CLMove.Town("Waypoint");
+	//CLMove.TakeWaypoint(1);
+	//LogNpcs();
+	//CLMove.Town("Waypoint");
+	//CLMove.TakeWaypoint(40);
+	//LogNpcs();
+	//CLMove.Town("Waypoint");
+	//CLMove.TakeWaypoint(75);
+	//LogNpcs();
+	//CLMove.Town("Waypoint");
+	//CLMove.TakeWaypoint(103);
+	//LogNpcs();
+	//CLMove.Town("Waypoint");
+	//CLMove.TakeWaypoint(109);
+	//LogNpcs();
+
+	// act 1 test
+	Print("1");
+	CLMove.Town("Akara");
+	CLMove.Town("Gheed");
+	CLMove.Town("Charsi");
+	CLMove.Town("Stash");
+	CLMove.Town("Portalspot");
+	CLMove.Town("Waypoint");
+	CLMove.TakeWaypoint(40);
+
+	// act 2 test
+	Print("2");
+	CLMove.Town("Stash");
+	CLMove.Town("Drognan");
+	CLMove.Town("Meshif");
+	CLMove.Town("Lysander");
+	CLMove.Town("Waypoint");
+	CLMove.TakeWaypoint(75);
+
+	// act 3 test
+	Print("3");
+	CLMove.Town("Ormus");
+	CLMove.Town("Stash");
+	CLMove.Town("Alkor");
+	CLMove.Town("Meshif");
+	CLMove.Town("Waypoint");
+	CLMove.TakeWaypoint(103);
+
+	// act 4 test
+	Print("4");
+	CLMove.Town("Jamella");
+	CLMove.Town("Stash");
+	CLMove.Town("Halbu");
+	CLMove.Town("Tyrael");
+	CLMove.Town("Portalspot");
+	CLMove.Town("Waypoint");
+	CLMove.TakeWaypoint(109);
+
+	// act 5 test
+	Print("5");
+	CLMove.Town("Qual-kehk");
+	CLMove.Town("Cain");
+	CLMove.Town("Malah");
+	CLMove.Town("Larzuk");
+	CLMove.Town("Portalspot");
+	CLMove.Town("Waypoint");
+
+	Print("scrolls");
+	CLTownManager.RefillScrolls();
+
+	Print("wp");
+	CLMove.Town("Waypoint");
+	CLMove.TakeWaypoint(129);
+	CLPrecast.DoPrecast();
+
+	for (i = 0; i < 3; i += 1){
+		//CLMove.TownStair(129+i, true);
+		CLMove.TakeStair(129+i);
+	}
+
+	CLMove.MakeTP(true);
+
+	CLMove.To("Waypoint");
+	CLMove.TakeWaypoint(3);
+	GetExitData();
+	CLDevTools.LogFunctions();
+	Delay(200000);
+	CLScript.SendMsg("CScriptControl.ntj", "SCRIPT_END");
+}
+
+function GetExitData() {
+	var i, j, k, n, area,
+		locarr = [];
+
+	area = GetArea(me.areaid);
+	if (area) {
+		for (i in area) {
+			for (j in area[i]) {
+				if (typeof area[i][j] === "object") {
+					for (k in area[i][j]) {
+						CLFile.Log("exits.txt", k + ": " + area[i][j][k] + "\n");
+						locarr.push([area[i][j].x, area[i][j].y]);
+					}
+				}
+			}
+		}
+	}
+
+	for (n in locarr) {
+		CLMove.Town(me.areaid,locarr[n][0], locarr[n][1]);
+	}
+}
+
+function LogNpcs() {
+	var i, npc;
+
+	npc = GetUnits(NTC_UNIT_NPC);
+
+	for (i = 0; i < npc.length; i += 1) {
+		CLFile.Log("npcs.txt", npc[i].name + ": x = " + npc[i].x + " y = " + npc[i].y + "\n");
+	}
+
+	CLFile.Log("npcs.txt", "---------------------------\n---------------------------\n");
+}

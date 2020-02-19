@@ -1,0 +1,339 @@
+var CLTownManager = {
+	BeltCol1: [],
+	BeltCol2: [],
+	BeltCol3: [],
+	BeltCol4: [],
+
+	Restock: function () {
+		//CLCommon.CloseScreens();
+		CLCommon.SwapWeapons(0);
+		CLItem.ClearCursor();
+		CLTown.SortPotions();
+
+
+		BuyTpScrolls = this.CheckTomb(0, 8);
+		BuyIdScrolls = this.CheckTomb(1, 8);
+		BuyPots = this.CheckBelt();
+		//BuyKey = CLTMGR_CheckKeys() < 6;
+
+		if (BuyPots) {	
+			Print("Buy Pots");
+		}
+
+		switch(me.act){
+			case 1:
+				if (BuyTpScrolls || BuyIdScrolls || BuyPots) {
+					return this.VisitAkara();
+				}
+				break;
+			
+			case 2:
+				if (BuyTpScrolls || BuyIdScrolls || BuyPots) {
+					return this.VisitDrognan();
+				}
+				break;
+
+			case 3:
+				if (BuyTpScrolls || BuyIdScrolls || BuyPots) {
+					return this.VisitOrmus();
+				}
+				break;
+				
+			case 4:
+				if (BuyTpScrolls || BuyIdScrolls || BuyPots) {
+					return this.VisitJamela();
+				}
+				break;
+				
+			case 5:
+				if (BuyTpScrolls || BuyIdScrolls || BuyPots){
+					return this.VisitMalah();
+				}
+				break;
+		}
+		return false;
+	},
+
+
+	VisitAkara: function () {
+		var npc;
+
+		CLMove.Location("Akara");
+		npc = CLUnit.Find(NTC_UNIT_NPC, NTC_NPC_ID_AKARA);
+
+		if (CLTown.Interact(npc)) {
+			CLTown.DoTrade(npc, NPC_TRADE);
+
+			if (BuyPots) {
+				this.FillBelt(npc);
+			}
+
+			if (BuyTpScrolls) {
+				this.FillTome(npc, 529);
+			}
+
+			if (BuyIdScrolls) {
+				this.FillTome(npc, 530);
+			}
+
+			me.Cancel(1);
+			return true;
+		}
+		return false;
+	},
+
+	VisitDrognan: function () {
+		var npc;
+
+		CLMove.Location("Drognan");
+		npc = CLUnit.Find(NTC_UNIT_NPC, NTC_NPC_ID_DROGNAN);
+
+		if (CLTown.Interact(npc)) {
+			CLTown.DoTrade(npc, NPC_TRADE);
+
+			if (BuyPots) {
+				this.FillBelt(npc);
+			}
+
+			if (BuyTpScrolls) {
+				this.FillTome(npc, 529);
+			}
+	
+			if (BuyIdScrolls) {
+				this.FillTome(npc, 530);	
+			}
+
+			me.Cancel(1);
+			return true;
+		}
+		return false;
+	},
+	
+	VisitOrmus: function () {
+		var npc;
+
+		CLMove.Location("Ormus");
+		npc = CLUnit.Find(NTC_UNIT_NPC, NTC_NPC_ID_ORMUS);
+
+		if (CLTown.Interact(npc)) {
+			CLTown.DoTrade(npc, NPC_TRADE);
+
+			if (BuyPots) {
+				this.FillBelt(npc);
+			}
+
+			if (BuyTpScrolls) {
+				this.FillTome(npc, 529);
+			}
+
+			if (BuyIdScrolls) {
+				this.FillTome(npc, 530);
+			}
+
+			me.Cancel(1);
+			return true;
+		}
+		return false;
+	},
+	
+	VisitJamela: function () {
+		var npc;
+
+		CLMove.Location("Jamella");
+		npc = CLUnit.Find(NTC_UNIT_NPC, NTC_NPC_ID_JAMELLA);
+
+		if (CLTown.Interact(npc)) {
+			CLTown.DoTrade(npc, NPC_TRADE);
+
+			if (BuyPots) {
+				this.FillBelt(npc);
+			}
+
+			if (BuyTpScrolls) {
+				this.FillTome(npc, 529);
+			}
+
+			if (BuyIdScrolls) {
+				this.FillTome(npc, 530);
+			}
+
+			me.Cancel(1);
+			return true;
+		}
+		return false;
+	},
+	
+	VisitMalah: function () {
+		var npc;
+
+		CLMove.Location("Malah");
+		npc = CLUnit.Find(NTC_UNIT_NPC, NTC_NPC_ID_MALAH);
+
+		if (CLTown.Interact(npc)) {
+			CLTown.DoTrade(npc, NPC_TRADE);
+
+			if (BuyPots) {
+				this.FillBelt(npc);
+			}
+
+			if (BuyTpScrolls) {
+				this.FillTome(npc, 529);
+			}
+
+			if (BuyIdScrolls) {
+				this.FillTome(npc, 530);
+			}
+
+			me.Cancel(1);
+			return true;
+		}
+		return false;
+	},
+	
+	CheckBelt: function () {
+		var a, b, c, d,
+			BeltSize = CLCommon.GetBeltSize();
+
+		CLTown.BeltInit();
+		a = this.BeltCol1[0] + this.BeltCol1[1] + this.BeltCol1[2] + this.BeltCol1[3];
+		b = this.BeltCol2[0] + this.BeltCol2[1] + this.BeltCol2[2] + this.BeltCol2[3];
+		c = this.BeltCol3[0] + this.BeltCol3[1] + this.BeltCol3[2] + this.BeltCol3[3];
+		d = this.BeltCol4[0] + this.BeltCol4[1] + this.BeltCol4[2] + this.BeltCol4[3];
+
+		if (a < BeltSize && (CLConfig.Belt[0] === "hp" || CLConfig.Belt[0] === "mp")) {
+			return true;
+		}
+
+		if (b < BeltSize && (CLConfig.Belt[1] === "hp" || CLConfig.Belt[1] === "mp")) {
+			return true;
+		}
+
+		if (c < BeltSize && (CLConfig.Belt[2] === "hp" || CLConfig.Belt[2] === "mp")) {
+			return true;
+		}
+
+		if (d < BeltSize && (CLConfig.Belt[3] === "hp" || CLConfig.Belt[3] === "mp")) {
+			return true;
+		}
+
+		return false;
+	},
+
+	FillBelt: function(npc) {
+		var i, j, k, items, BeltSize,
+			a = [];
+
+		CLTown.BeltInit();
+
+		BeltSize = CLCommon.GetBeltSize();
+
+		//Delay(1000);
+
+		a[0] = this.BeltCol1[0] + this.BeltCol1[1] + this.BeltCol1[2] + this.BeltCol1[3];
+		a[1] = this.BeltCol2[0] + this.BeltCol2[1] + this.BeltCol2[2] + this.BeltCol2[3];
+		a[2] = this.BeltCol3[0] + this.BeltCol3[1] + this.BeltCol3[2] + this.BeltCol3[3];
+		a[3] = this.BeltCol4[0] + this.BeltCol4[1] + this.BeltCol4[2] + this.BeltCol4[3];
+
+
+		for (i = 0; i < 3; i += 1) {
+			if (a[i] < BeltSize) {
+				if(CLConfig.Belt[i] === "hp") {
+					for (j = 591; j > 586; j -= 1){
+						items = npc.GetItems(j);
+						if (items[0]) {
+							for (k = a[i]; k < BeltSize; k += 1) {
+								CLItem.Shop(items[0], npc, 1);
+								Delay(500);
+							}
+							break;
+						}
+					}
+				}
+
+				if(CLConfig.Belt[i] === "mp") {
+					for (j = 596; j > 592; j -= 1) {
+						items = npc.GetItems(j);
+
+						if (items[0]){
+							for (k = a[i]; k < BeltSize; k += 1) {
+								CLItem.Shop(items[0], npc, 1);
+								Delay(500);
+							}
+							break;
+						}
+					}
+				}
+			}
+		}
+		return;
+	},
+
+	FillTome: function (npc, type) {
+		var items = npc.GetItems(type);
+
+		if (!items){
+			return false;
+		}
+
+		if (items && items.length > 0) {
+			return CLItem.Shop(items[0], npc, 3);
+		}
+
+		return false;
+	},
+
+	CheckTomb: function (type, amount) {
+		var i, tome;
+		if (type === null) {
+			return 0;
+		}
+
+		switch (type) {
+			case 0:
+				tome = me.GetItems(518);
+				break;
+
+			case 1:
+				tome = me.GetItems(519);
+				break;
+		}
+
+		if (tome) {
+			for	(i = 0; i < tome.length; i += 1){
+				if (tome[i].itemloc === 0 && tome[i].bodyloc === 0) {
+					if (tome[i].GetStat(70) < amount) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	},
+
+	CheckScrolls: function (type, amount) {
+		var i, tome;
+
+		if (type === null) {
+			return 0;
+		}
+
+		switch (type) {
+			case 0:
+				tome = me.GetItems(518);
+				break;
+
+			case 1:
+				tome = me.GetItems(519);
+				break;
+		}
+
+		if (tome) {
+			for	(i = 0; i < tome.length; i += 1) {
+				if (tome[i].itemloc === 0 && tome[i].bodyloc === 0) {
+					return tome[i].GetStat(70);
+				}
+			}
+		}
+		return -1;
+	}
+};

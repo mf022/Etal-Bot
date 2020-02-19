@@ -1,0 +1,175 @@
+var CLTracker =  {
+	Create: function (who) {
+		var obj, string;
+
+		if (who === undefined) {
+			who = me.name;
+		}
+
+		obj = {
+			Game: "",
+			GamePass: "",
+			InGame: false,
+			Script: "",
+			Gold: 0,
+			Experience: 0,
+			Mule: false,
+			TorchMule: false,
+			Rushing: false,
+			Leading: false
+		};
+
+		string = JSON.stringify(obj);
+		CLFile.OverWrite("Data/" + me.realm + "/" + who + ".ntl", string);
+
+		return obj;
+	},
+
+	TrackMe: function () {
+		CLTracker.UpdateStats("game", me.gamename);
+		CLTracker.UpdateStats("password", me.gamepassword);
+		CLTracker.UpdateStats("ingame", me.ingame);
+		CLTracker.UpdateStats("script", CLScript.Runs[CLScript.Current]);
+		CLTracker.UpdateStats("gold", (me.GetStat(14) + me.GetStat(15)));
+		CLTracker.UpdateStats("experience", me.GetStat(13));
+		CLTracker.UpdateStats("mule", false);
+		CLTracker.UpdateStats("torchmule", false);
+		CLTracker.UpdateStats("rushing", false);
+		CLTracker.UpdateStats("leading", false);
+	},
+
+	GetObj: function (who) {
+		var obj, string;
+
+		if (who === undefined) {
+			who = me.name;
+		}
+
+		if (!CLFile.Exists("Data/" + me.realm + "/" + who + ".ntl")) {
+			this.Create();
+		}
+
+		string = CLFile.Read("Data/" + me.realm + "/" + who + ".ntl");
+
+		try {
+			obj = JSON.parse(string);
+		} catch (e4) {
+			obj = this.Create(who);
+		}
+
+		if (obj) {
+			return obj;
+		}
+
+		return {Game: "", GamePass: "", InGame: false, Script: "", Gold: 0,
+			Experience: 0, Mule: false, TorchMule: false, Rushing: false, Leading: false};
+	},
+
+	GetStat: function (ret, who) {
+		var obj;
+
+		if (who === undefined) {
+			who = me.name;
+		}
+
+		obj = this.GetObj(who);
+
+		switch (ret) {
+			case "game":
+				return obj.Game;
+
+			case "gamepass":
+				return obj.GamePass;
+
+			case "ingame":
+				return obj.InGame;
+
+			case "script":
+				return obj.Script;
+
+			case "gold":
+				return obj.Gold;
+
+			case "experience":
+				return obj.Experience;
+
+			case "mule":
+				return obj.Mule;
+
+			case "torchmule":
+				return obj.TorchMule;
+
+			case "rushing":
+				return obj.Rushing;
+
+			case "leading":
+				return obj.Leading;
+		}
+	},
+
+	GetStats: function (who) {
+		var obj;
+
+		if (who === undefined) {
+			who = me.name;
+		}
+
+		obj = this.GetObj(who);
+
+		return {Game: obj.Game, GamePass: obj.GamePass, InGame: obj.InGame, Script: obj.Script, Gold: obj.Gold,
+			Experience: obj.Experience, Mule: obj.Mule, TorchMule: obj.TorchMule, Rushing: obj.Rushing, Leading: obj.Leading};
+	},
+
+	UpdateStats: function (stat, value) {
+		var obj, string;
+
+		obj = this.GetObj();
+
+		switch (stat) {
+		case "game":
+			obj.Game = value;
+
+			break;
+		case "gamepass":
+			obj.GamePass = value;
+
+			break;
+		case "ingame":
+			obj.InGame = value;
+
+			break;
+		case "script":
+			obj.Script = value;
+
+			break;
+		case "gold":
+			obj.Gold = value;
+
+			break;
+		case "experience":
+			obj.Experience = value;
+
+			break;
+		case "mule":
+			obj.Mule = value;
+
+			break;
+		case "torchmule":
+			obj.TorchMule = value;
+
+			break;
+		case "rushing":
+			obj.Rushing = value;
+
+			break;
+		case "leading":
+			obj.Leading = value;
+
+			break;
+		}
+
+		string = JSON.stringify(obj);
+
+		CLFile.OverWrite("Data/" + me.realm + "/" + me.name + ".ntl", string);
+	}
+};

@@ -1,0 +1,96 @@
+var CLSkill = {
+	GetLevel: function (skillid) {
+		var alt, level;
+
+		level = me.GetSkill(skillid, 1);
+
+		if (level !== null) {
+			return level;
+		}
+
+		return 0;
+	},
+
+    Put: function (skillid, hand) {
+		if (me.GetSkill(hand+2) === skillid) {
+			return true;
+		}
+
+		if (this.GetLevel(skillid, 1) < 1) {
+			Print("test failed");
+			return false;
+		}
+
+		me.SetSkill(skillid, hand);
+		Delay(NTC_DELAY_FRAME);
+		return true;
+	},
+
+	Cast: function (skillid, usehand, x, y) {
+		var hand, shift, i, n, mode;
+
+		if (skillid === undefined) {
+			return false;
+		}
+
+		if (usehand === undefined) {
+			hand = NTC_CLICK_RDOWN;
+			usehand = NTC_HAND_RIGHT;
+		} else {
+			if (usehand === NTC_HAND_RIGHT) {
+				hand = NTC_CLICK_RDOWN;
+			} else if (usehand === NTC_HAND_LEFT) {
+				hand = NTC_CLICK_LDOWN;
+			} else {
+				hand = NTC_CLICK_LDOWN;
+				usehand = NTC_HAND_LEFT;
+			}
+		}
+
+		if (this.Put(skillid, usehand)) {
+			for (i = 0; i < 5; i += 1) {
+				switch (arguments.length) {
+				case 1:
+				case 2:
+					ClickMap(hand, NTC_SHIFT_HOLD, me.x, me.y);
+					break;
+				case 3:
+					if (!ClickMap(hand, NTC_SHIFT_HOLD, x)) {
+						Delay(NTC_DELAY_FRAME);
+						return false;
+					}
+					break;
+				default:
+					ClickMap(hand, NTC_SHIFT_HOLD, x, y);
+					break;
+				}
+
+				for (n = 0; n < 4; n += 1) {
+					Delay(NTC_DELAY_FRAME);
+					mode = me.mode;
+
+					if (mode == 7 || mode == 8 || (mode >= 10 && mode <= 16) || mode == 18) {
+						Delay(NTC_DELAY_FRAME);
+						break;
+					}
+				}
+
+				ClickMap(hand + 2, NTC_SHIFT_NONE, null);
+
+				if (n < 4) {
+					for (i = 0; i < 100; i += 1) {
+						Delay(20);
+						if (me.mode != mode) {
+							break;
+						}
+					}
+
+					return true;
+				}
+
+				Delay(NTC_DELAY_FRAME);
+			}
+		}
+		return false;
+	}
+};

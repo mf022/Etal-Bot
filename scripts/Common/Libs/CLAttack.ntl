@@ -1,0 +1,1563 @@
+var NTA_DAMAGE_NONE = 0;
+var NTA_DAMAGE_PHYSICAL = 1;
+var NTA_DAMAGE_MAGIC = 2;
+var NTA_DAMAGE_FIRE = 3;
+var NTA_DAMAGE_LIGHTNING = 4;
+var NTA_DAMAGE_COLD = 5;
+var NTA_DAMAGE_POISON = 6;
+
+
+var Ranged = CLCommon.RangedNormal();
+var SkillHand = [];
+var	SkillDamage = [];
+var	SkillRange = [];
+var	CurseState = [];
+var	NovaTick = 0;
+var	SorcAttack = 0;
+var	SkipImmuneBoss = false;
+var	MonstersToAttackFirst = [];
+
+var CLAttack = {
+	Initialize: function () {
+		var i;
+
+		if (CLConfig.AttackSkill[1] === -1 || CLConfig.AttackSkill[3] === -1) {
+			Print("Please set the attacks in the char config then restart the bot");
+
+			while (true) {
+				Delay(500);
+			}
+		}
+		
+		for (i = 0; i < CLConfig.AttackSkill.length; i += 1) {
+			if (CLConfig.AttackSkill[i] > -1) {
+				//SkillHand[i] = GetBaseStat("skills.txt", CLConfig.AttackSkill[i], 166) ? 2 : me.classid === 5 ? NTC_HAND_LEFT: NTC_HAND_RIGHT;
+				SkillDamage[i] = this.GetDamageType(CLConfig.AttackSkill[i]);
+
+				switch (CLConfig.AttackSkill[i]) {
+				case 0: //Normal Attack
+					if (Ranged) {
+						SkillRange[i] = 20;
+						SkillHand[i] = NTC_HAND_LEFT;
+					} else {
+						SkillRange[i] = 2;
+						SkillHand[i] = NTC_HAND_LEFT;
+					}
+					break;
+				case 1: //Kicks
+					SkillRange[i] = 2;
+					SkillHand[i] = NTC_HAND_LEFT;
+					break;
+				case 5: // Left Hand Swing
+					SkillRange[i] = 2;
+					SkillHand[i] = NTC_HAND_LEFT;
+					break;
+				case 6: //Magic Arrow
+					break;
+				case 7: //Fire Arrow
+					SkillRange[i] = 20;
+					SkillHand[i] = NTC_HAND_LEFT;
+					break;
+				case 8: //Inner Sight
+					SkillRange[i] = 13;
+					SkillHand[i] = NTC_HAND_RIGHT;
+					break;
+				case 10: //Jab
+					SkillRange[i] = 3;
+					SkillHand[i] = NTC_HAND_LEFT;
+					break;
+				case 11: //Cold Arrow
+					break;
+				case 12: //Multiple Shot
+					SkillRange[i] = 20;
+					SkillHand[i] = NTC_HAND_LEFT;
+					break;
+				case 14: //Power Strike
+					SkillRange[i] = 3;
+					SkillHand[i] = NTC_HAND_LEFT;
+					break;
+				case 15: //Poison Javelin
+					SkillRange[i] = 10;
+					SkillHand[i] = NTC_HAND_LEFT;
+					break;
+				case 16: //Exploding Arrow
+					SkillRange[i] = 20;
+					SkillHand[i] = NTC_HAND_LEFT;
+					break;
+				case 17: //Slow Missiles
+					SkillRange[i] = 13;
+					SkillHand[i] = NTC_HAND_RIGHT;
+					break;
+				case 19: //Impale
+					SkillRange[i] = 3;
+					SkillHand[i] = NTC_HAND_LEFT;
+					break;
+				case 20: //Lightning Bolt
+					break;
+				case 21: //Ice arrow
+					break;
+				case 22: //Guided arrow
+					SkillRange[i] = 20;
+					SkillHand[i] = NTC_HAND_LEFT;
+					break;
+				case 24: //Charged Strike
+					if(!CLConfig.FarCastAmazon) {
+						SkillRange[i] = 3;
+						SkillHand[i] = NTC_HAND_LEFT;
+					} else if (CLConfig.FarCastAmazon) {
+						SkillRange[i] = CLConfig.FarCastRange;
+						SkillHand[i] = NTC_HAND_LEFT;
+					}
+					break;
+				case 25: //Plague jav
+					SkillRange[i] = 10;
+					SkillHand[i] = NTC_HAND_LEFT;
+					break;
+				case 26: //Strafe
+					break;
+				case 27: //Immolation Arrow
+					SkillRange[i] = 20;
+					SkillHand[i] = NTC_HAND_LEFT;
+					break;
+				case 30: //Fend
+					SkillRange[i] = 3;
+					SkillHand[i] = NTC_HAND_RIGHT;
+					break;
+				case 31: //Freezing arrow
+					SkillRange[i] = 20;
+					SkillHand[i] = NTC_HAND_LEFT;
+					break;
+				case 34: //Lightning Strike
+					SkillRange[i] = 3;
+					SkillHand[i] = NTC_HAND_LEFT;
+					break;
+				case 35: //Lightning Fury
+					SkillRange[i] = 15;
+					SkillHand[i] = NTC_HAND_LEFT;
+					break;
+				case 38: //charged bolt
+					SkillRange[i] = 7;
+					SkillHand[i] = NTC_HAND_LEFT;
+					break;
+				case 41: // Inferno
+					break;
+				case 42: // Static
+					SkillRange[i] = 3;
+					SkillHand[i] = NTC_HAND_RIGHT;
+					break;
+				case 44: //Frost Nova
+					SkillRange[i] = 7;
+					SkillHand[i] = NTC_HAND_LEFT;
+					break;
+				case 46: // Blaze
+					SkillRange[i] = 2;
+					SkillHand[i] = NTC_HAND_LEFT;
+					break;
+				case 48: // Nova
+					SkillRange[i] = 7;
+					SkillHand[i] = NTC_HAND_LEFT;
+					break;
+				case 64: // Frozen Orb
+					SkillRange[i] = 15;
+					SkillHand[i] = NTC_HAND_LEFT;
+					break;
+				case 67: // teeth
+					SkillRange[i] = 15;
+					SkillHand[i] = NTC_HAND_LEFT;
+					break;
+				case 73: // Poison Dagger
+					SkillRange[i] = 2;
+					SkillHand[i] = NTC_HAND_LEFT;
+					break;
+				case 84: // Bone Spear
+					SkillRange[i] = 15;
+					SkillHand[i] = NTC_HAND_LEFT;
+					break;
+				case 91: //Lower Resist
+					SkillRange[i] = 50;
+					SkillHand[i] = NTC_HAND_RIGHT;
+					break;
+				case 92: // Poison Nova
+					SkillRange[i] = 15;
+					SkillHand[i] = NTC_HAND_LEFT;
+					break;
+				case 93: //Bone Spirit
+					SkillRange[i] = 15;
+					SkillHand[i] = NTC_HAND_LEFT;
+					break;
+				case 95: //Revive
+					SkillRange[i] = 20;
+					SkillHand[i] = NTC_HAND_RIGHT;
+					break;
+				case 96: //Sacrifice
+					break;
+				case 97: //Smite
+					SkillRange[i] = 2;
+					SkillHand[i] = NTC_HAND_LEFT;
+					break;
+				case 101: //Holy Bolt
+					SkillRange[i] = 15;
+					SkillHand[i] = NTC_HAND_LEFT;
+					break;
+				case 106: //Zeal
+					SkillRange[i] = 3;
+					SkillHand[i] = NTC_HAND_LEFT;
+					break;
+				case 111: //Vengeance
+					SkillRange[i] = 2;
+					SkillHand[i] = NTC_HAND_LEFT;
+					break;
+				case 112: //Blessed Hammer
+					SkillRange[i] = 3;
+					SkillHand[i] = NTC_HAND_LEFT;
+					break;
+				case 121: // FOH
+					SkillRange[i] = 20;
+					SkillHand[i] = NTC_HAND_LEFT;
+					break;
+				case 126: // Bash
+					break;
+				case 130: // Howl
+					SkillRange[i] = 2;
+					SkillHand[i] = NTC_HAND_RIGHT;
+					break;
+				case 131: // find Potion
+					SkillRange[i] = 3;
+					SkillHand[i] = NTC_HAND_RIGHT;
+					break;
+				case 132: // Leap // this is limited by lvl so i set it to lvl 1 increase as needed
+					SkillRange[i] = 4;
+					SkillHand[i] = NTC_HAND_RIGHT;
+					break;
+				case 133: // Double Swing
+					break;
+				case 139: // stun
+					SkillRange[i] = 2;
+					SkillHand[i] = NTC_HAND_LEFT;
+					break;
+				case 140: // Double Throw
+					SkillRange[i] = 20;
+					SkillHand[i] = NTC_HAND_LEFT;
+					break;
+				case 142: // Find item
+					SkillRange[i] = 3;
+					SkillHand[i] = NTC_HAND_RIGHT;
+					break;
+				case 144: //Concentrate
+					SkillRange[i] = 3;
+					SkillHand[i] = NTC_HAND_LEFT;
+					break;
+				case 146: // Battle cry
+					SkillRange[i] = 3;
+					SkillHand[i] = NTC_HAND_RIGHT;
+					break;
+				case 147: //Frenzy
+					SkillRange[i] = 2;
+					SkillHand[i] = NTC_HAND_LEFT;
+					break;
+				case 150: //grim ward
+					SkillRange[i] = 3;
+					SkillHand[i] = NTC_HAND_RIGHT;
+					break;
+				case 151: //Whirlwind
+					SkillRange[i] = 8;
+					SkillHand[i] = NTC_HAND_LEFT;
+					break;
+				case 152: //Berserk
+					SkillRange[i] = 2;
+					SkillHand[i] = NTC_HAND_LEFT;
+					break;
+				case 154: // War Cry
+					SkillRange[i] = 4;
+					SkillHand[i] = NTC_HAND_RIGHT;
+					break;
+				case 225: //Fire Storm
+					break;
+				case 229: //Molten Boulder
+					break;
+				case 230: //Arctic Blast
+					break;
+				case 232: //Feral Rage
+					break;
+				case 233: //Maul
+					break;
+				case 234: //Fissure
+					break;
+				case 238: //Rabies
+					break;
+				case 239: //Fire Claws
+					break;
+				case 240: //Twister
+					break;
+				case 242: //Hunger
+					break;
+				case 243: //Shockwave
+					break;
+				case 244: //Volcano
+					SkillRange[i] = 3;
+					SkillHand[i] = NTC_HAND_LEFT;
+					break;
+				case 245: //Tornado
+					SkillRange[i] = CLConfig.TornadoDistance;
+					SkillHand[i] = NTC_HAND_LEFT;
+					break;
+				case 248: //Fury      
+					SkillRange[i] = 3;
+					SkillHand[i] = NTC_HAND_LEFT;
+					break;
+				case 249: //Armageddon      
+					SkillRange[i] = 9;
+					SkillHand[i] = NTC_HAND_LEFT;
+					break;
+				case 255: //Dragon Talon
+					SkillRange[i] = 2;
+					SkillHand[i] = NTC_HAND_LEFT;
+					break;
+				case 271: // Lightning Sentry
+					break;
+				case 276: // Death Sentry
+					break;
+				case 261: // Charged Bolt Sentry
+					SkillRange[i] = 20;
+					SkillHand[i] = NTC_HAND_RIGHT;
+					break;
+				case 251: // Fire Blast
+					break;
+				case 256: // Shockweb Sentry
+					SkillRange[i] = 15;
+					SkillHand[i] = NTC_HAND_LEFT;
+					break;
+				default:
+					SkillRange[i] = 25; 
+					SkillHand[i] = NTC_HAND_RIGHT;
+					break;
+				}
+			}
+		}
+
+		if (me.classid === NTC_CHAR_CLASS_ASSASSIN) {
+			CLToon.InitializeAttacks();
+		}
+		
+		if (me.classid === NTC_CHAR_CLASS_NECROMANCER) {
+			for (i = 0 ; i < 2 ; i+= 1) {
+				if (CLConfig.Curse[i] > 0) {
+					switch (CLConfig.Curse[i]) {
+						case 0: //nothing
+							CurseState[i] = 0;
+							break;
+						case 66: //amplify damage
+							CurseState[i] = 9;
+							break;
+						case 71: //dim vision
+							CurseState[i] = 23;
+							break;
+						case 72: //weaken
+							CurseState[i] = 19;
+							break;
+						case 76: //iron maiden
+							CurseState[i] = 55;
+							break;
+						case 77: //terror
+							CurseState[i] = 56;
+							break;
+						case 81: //confuse
+							CurseState[i] = 59;
+							break;
+						case 82: //life tap
+							CurseState[i] = 58;
+							break;
+						case 86: //attract
+							CurseState[i] = 57;
+							break;
+						case 87: //decrepify
+							CurseState[i] = 60;
+							break;
+						case 91: //lower resist
+							CurseState[i] = 61;
+							break;
+						default:
+							CLConfig.Curse[i] = 0;
+							Print("Invalid curse id");
+							break;
+					}
+				}
+			}
+		}
+	},
+
+	DistanceSort: function (unitA, unitB) {
+		if (GetDistance(me.x, me.y, unitA.x, unitA.y) < GetDistance(me.x, me.y, unitB.x, unitB.y)) {
+			return -1;
+		}
+		return 1;
+	},
+
+	SetMonster: function (classid, targethp) {
+		var target, thp, attackcount;
+
+		if (CLConfig.AttackSkill[1] < 0) {
+			return false;
+		}
+		
+		target = CLUnit.Find(NTC_UNIT_MONSTER, classid, 5);
+
+		if (!target) {
+			return false;
+		}
+
+		thp = Math.floor((targethp * target.hpmax)/100);
+
+		if (target.IsAttackable()) {
+			attackcount = 0;
+
+			while (attackcount < 300 && this.IsValidMonster(target )&& target.hp > thp) {
+				if (CLToon.Attack(target, (attackcount % 30) === 0) < 2) {
+					break;
+				}
+			}
+		}
+		return true;
+	},
+
+
+	Kill: function (classid) {
+		var target, attackcount;
+		
+		if (CLConfig.AttackSkill[1] < 0) {
+			return false;
+		}
+
+		target = CLUnit.Find(NTC_UNIT_MONSTER, classid, 5);
+
+		if (!target) {
+			return false;
+		}
+		
+		if (CLConfig.ClearWeakerMobsFirst && CLConfig.SkipClearingWeakerAreas.indexOf(me.areaid) < 0) {
+			this.ClearPosition(20, true, 2);
+		}
+
+		if (target.IsAttackable()) {
+			attackcount = 0;
+			while (attackcount < 300 && this.IsValidMonster(target)) {
+				if (CLToon.Attack(target, (attackcount % 30) === 0) < 2) {
+					break;
+				}
+
+				//if (attackcount === 0) {
+					//if(CLTMGR_CheckCurse(NTConfig_CheckSelfSafe, NTConfig_CheckMercSafe, true)) {
+						//CLTMGR_VisitTown();
+					//} else if( CLTMGR_CheckSafe(NTConfig_CheckSelfSafe, NTConfig_CheckMercSafe, true)){
+						//CLTMGR_VisitTown();
+					//}
+				//}
+
+				//if ((attackcount % 5) === 0) {
+					//if(CLTMGR_CheckCurse(NTConfig_CheckSelfSafe, NTConfig_CheckMercSafe, true)) {
+						//CLTMGR_VisitTown();
+					//} else if( CLTMGR_CheckSafe(NTConfig_CheckSelfSafe, NTConfig_CheckMercSafe, true)){
+						//CLTMGR_VisitTown();
+					//}
+				//}
+				attackcount += 1;
+				SorcAttack += 1;
+			}
+		}
+
+		if (this.SkipImmuneBoss) {
+			Print(COLOR_2 + "skipping " + target.name + " because of your skip immune settings");
+			return true;
+		}
+
+		return (target.hp <= 0 || target.mode === 0 || target.mode === 12);
+	},
+
+	MonsterStats: function (unit) {
+		this.name = unit.name;
+		this.x = unit.x;
+		this.y = unit.y;
+		this.gid = unit.gid;
+		this.classid = unit.classid;
+		this.spectype = unit.spectype;
+	},
+
+	SortRooms: function (a, b) {
+		if (GetDistance(me.x, me.y, a[0], a[1]) < GetDistance(me.x, me.y, b[0], b[1])) {
+			return -1;
+		}
+		return 1;
+	},
+
+	Dodge: function (target, distance) {
+		var i, j, coordx, coordy, monster, count,
+			maxcount = 999,
+			coords = [],
+			goodCoords = [],
+			monList = [],
+			angles = [45, 90, 135, 180, 225, 270, 305, 360];
+
+		for (i = 0; i < angles.length; i += 1) {
+			coordx = Math.round((Math.cos(angles[i] * Math.PI / 180)) * distance + target.x);
+			coordy = Math.round((Math.sin(angles[i] * Math.PI / 180)) * distance + target.y);
+			if (CheckCollision(me.areaid, coordx, coordy, 1)) {
+				coords.push([coordx, coordy]);
+			}
+		}
+
+		if (coords.length === 0) { // no valid positions - don't move
+			return true;
+		}
+
+		coords.sort(this.SortRooms);
+		monster = GetUnit(1);
+
+		if (monster) {
+			do {
+				if (monster.hp > 0) {
+					monList.push(new this.MonsterStats(target));
+				}
+			} while (monster.GetNext());
+		}
+		for (i = 0; i < coords.length; i += 1) {
+			count = 0;
+			for (j = 0; j < monList.length; j += 1) {
+				if (monList[j].hp > 0 && GetDistance(monList[j].x, monList[j].y, coords[i][0], coords[i][1]) < 10) {
+					count += 1;
+				}
+			}
+			if (count < maxcount) {
+				goodCoords = [coords[i][0], coords[i][1]];
+				maxcount = count;
+				if (count === 0) {
+					break;
+				}
+			}
+		}
+		if (goodCoords.length > 0) { // just in case goodCoords is empty (shouldn't happen)
+			if (Math.abs(me.x - goodCoords[0]) < 3 && Math.abs(me.y - goodCoords[1]) < 3) { // close enough
+				return true;
+			}
+
+			CLMove.To(me.areaid, goodCoords[0], goodCoords[1]);
+		}
+		return true;
+	},
+
+	GetSealLocs: function (seal) {
+		var unit;
+
+		if (seal === undefined) {
+			return null;
+		}
+
+		switch (seal) {
+			case "viz":
+				unit = GetPresetUnits(108, NTC_UNIT_OBJECT, 396);
+
+				if (unit[0].roomy * 5 + unit[0].y === 5275) {
+					return 1;
+				}
+				break;
+			case "seis":
+				unit = GetPresetUnits(108, NTC_UNIT_OBJECT, 394);
+
+				if (unit[0].roomx * 5 + unit[0].x === 7773) {
+					return 1;
+				}
+				break;
+			case "venom":
+				unit = GetPresetUnits(108, NTC_UNIT_OBJECT, 392);
+
+				if (unit[0].roomx * 5 + unit[0].x === 7893) {
+					return 1;
+				}
+				break;
+		}
+		return 2;
+	},
+
+	OutOfBounds: function (Monst){
+		if (Monst.name === "Grand Vizier of Chaos") { // vizier is never out of bounds
+			return false;
+		}
+
+		if (me.y < 5325) {
+			if (Monst.x > 7772 && Monst.x < 7791 && Monst.y < 5478 && Monst.y > 5452) { // first part of first unwalkable from entrance
+				return true;
+			}
+
+			if (Monst.x < 7817 && Monst.y < 5472 && Monst.y > 5432 && Monst.x > 7791) { // second part of first unwalkable from entrance
+				return true;
+			}
+
+			if (Monst.x > 7773 && Monst.y > 5367 && Monst.x < 7793 && Monst.y < 5408) { // first part of second unwalkable from entrance
+				return true;
+			}
+
+			if (Monst.x > 7797 && Monst.y > 5366 && Monst.x < 7812 && Monst.y < 5392) { // second part of second unwalkable from entrance
+				return true;
+			}
+
+			if (Monst.x < 7767) { // left side from entrance
+				return true;
+			}
+
+			if (Monst.x > 7821) { // right side from entrance
+				return true;
+			}
+		} else {
+			if (me.x < 7767) { // going to vizier
+				if (Monst.x < 7646) { // wall above vizier
+					return true;
+				}
+
+				switch (this.GetSealLocs("viz")) {
+					case 1: // shape of a y
+						if (Monst.x < 7758 && Monst.y  > 5322 && Monst.x < 7707 && Monst.y < 5268) { // first section to vizier type 1
+							return true;
+						}
+
+						if (Monst.x > 7707 && Monst.y > 5303 && Monst.x < 7667 && Monst.y < 5285) { // second section to vizier type 1
+							return true;
+						}
+
+						if (Monst.y > 5321 && Monst.x < 7647 && Monst.x > 7681 && Monst.y < 5302) { // left seal block
+							return true;
+						}
+
+						if (Monst.x > 7680 && Monst.y < 5267 && Monst.y > 5284 && Monst.x < 7646) { // right seaal box
+							return true;
+						}
+						break;
+					case 2:// shape of a flipped L
+						if (Monst.x > 7766 && Monst.y > 5316 && Monst.x < 7706 && Monst.y < 5266) { // first section to vizier seal type 2
+							return true;
+						}
+
+						if (Monst.x > 7707 && Monst.y > 5322 && Monst.x < 7647 && Monst.y < 5304) { // second section to vizier seal type 2
+							return true;
+						}
+
+						if (Monst.x > 7662 && Monst.y > 5303 && Monst.x < 7647 && Monst.y < 5267) { // third section to vizier seal type 2
+							return true;
+						}
+						break;
+				}
+			}
+
+			if (me.y > 5269) { // on way to de seis
+				if (Monst.y < 5147) { // wall behind de seis
+					return false;
+				}
+
+				switch (this.GetSealLocs("seis")) {
+					case 1: // shape of a 2
+						if (Monst.x < 7767 && Monst.y > 5263 && Monst.x > 7819 && Monst.y < 5222) { // first section to seis seal type 1
+							return true;
+						}
+
+						if (Monst.x > 7781 && Monst.y > 5222 && Monst.x < 7767 && Monst.y < 5186) { // second section to seis seal type 1
+							return true;
+						}
+
+						if (Monst.y > 5201 && Monst.x > 7821 && Monst.x < 7767 && Monst.y < 5186) { // third section to seis seal type 1
+							return true;
+						}
+
+						if (Monst.x > 7821 && Monst.y > 5201 && Monst.x < 7807 && Monst.y < 5147) { // forth section to seis seal type 1
+							return true;
+						}
+
+						if (Monst.x > 7820 && Monst.y > 5161 && Monst.x < 7767 && Monst.y < 5147) { // last section to seis seal type 1
+							return true;
+						}
+						break;
+
+					case 2: // shape of a 5
+						if (Monst.x < 7766 && Monst.y < 5223 && Monst.x > 7821 && Monst.y > 5267) { // first section to seis seal type 2
+							return true;
+						}
+
+						if (Monst.x > 7822 && Monst.y < 5183 && Monst.x < 7805 && Monst.y > 5223) { // second section to seis seaal type 2
+							return true;
+						}
+
+						if (Monst.x > 7819 && Monst.y < 5182 && Monst.x < 7768 && Monst.y > 5202) { // third section of seis seal type 2
+							return true;
+						}
+
+						if (Monst.x > 7780 && Monst.y < 5147 && Monst.x < 7767 && Monst.y > 5202) { // forth section to seis seal type 2
+							return true;
+						}
+
+						if (Monst.x < 7767 && Monst.y > 5161 && Monst.x > 7821 && Monst.y < 5147) { // last section to seis seal type 2
+							return true;
+						}
+						break;
+				}
+			}
+
+			if (me.x > 7825) { // on way to venom
+				if (Monst.x > 7941) { // wall below venom
+					return true;
+				}
+
+				switch (this.GetSealLocs("venom")) {
+					case 1: // shape of a t
+						if (Monst.x > 7861 && Monst.y > 5322 && Monst.x < 7826 && Monst.y < 5267) { // first section to venom seal type 1
+							return true;
+						}
+
+						if (Monst.x > 7940 && Monst.y > 5301 && Monst.x < 7863 && Monst.y < 5287) { // secone section to venom seal type 1
+							return true;
+						}
+
+						if (Monst.x > 7901 && Monst.y > 5321 && Monst.x < 7882 && Monst.y < 5302) { // first seal cut out type 1
+							return true;
+						}
+
+						if (Monst.x > 7920 && Monst.y > 5284 && Monst.x < 7907 && Monst.y < 5267) { // second seal cut out type 1
+							return true;
+						}
+						break;
+
+					case 2: // shape of a hook
+						if (Monst.x > 7888 && Monst.y > 5321 && Monst.x < 7821 && Monst.y < 5266) { // first section to venom seal type 2
+							return true;
+						}
+
+						if (Monst.x > 7940 && Monst.y > 5282 && Monst.x < 7890 && Monst.y < 5267) { // second section to venom seal type 2
+							return true;
+						}
+
+						if (Monst.x < 7923 && Monst.y > 5322 && Monst.x > 7940 && Monst.y < 5267) { // third section to venom seal type 2
+							return true;
+						}
+
+						if (Monst.x > 7941 && Monst.y > 5321 && Monst.x < 7908 && Monst.y < 5303) {
+							return true;
+						}
+						break;
+				}
+			}
+		}
+
+		if (Monst.x > 7767 && Monst.y > 5269 && Monst.x < 7825 && Monst.y < 5325) { // block where diablo spawns
+			return true;
+		}
+
+		return false;
+	},
+
+	ClearPosition: function (range, sortFunc, spectype, classid) {
+		var orgx, orgy, monList, ignoreList, target, result,
+			gidAttack = [],
+			attackcount = 0;
+
+		if (CLConfig.AttackSkill[1] < 0 || CLConfig.AttackSkill[3] < 0) {
+			return false;
+		}
+
+		if (range === undefined) {
+			range = 20;
+		}
+
+		if (sortFunc === undefined) {
+			sortFunc = this.DistanceSort;
+		}
+
+		if (spectype === undefined) {
+			spectype = false;
+		}
+
+		if (classid === undefined) {
+			classid = false;
+		}
+
+		orgx = me.x;
+		orgy = me.y;
+		ignoreList = [];
+
+		MainLoop : while (attackcount < 300) {
+			monList = [];
+			target = CLUnit.Find(NTC_UNIT_MONSTER);
+			if (target) {
+				do {
+					if (target.IsAttackable() && typeof target.GetParent() !== "object") {
+						if ((me.classid === 1 || me.classid === 2 || me.classid === 6) && CLConfig.Dodge && GetDistance(me, target) < 7) {
+							this.Dodge(target, 15);
+							continue MainLoop;
+						}
+						if (ignoreList.indexOf(target.gid) < 0 && GetDistance(orgx, orgy, target.x, target.y) <= range) {
+							if (this.IsValidMonster(target)) {
+								if (me.areaid === 108 && !this.OutOfBounds(target)) {
+									monList.push(new this.MonsterStats(target));
+								} else {
+									monList.push(new this.MonsterStats(target));
+								}
+							} else {
+								ignoreList.push(target.gid);
+							}
+						}
+					}
+				} while (target.GetNext());
+			}
+
+			if (monList.length === 0) {
+				break;
+			}
+
+			monList.sort(sortFunc);
+			target = CLUnit.Find(NTC_UNIT_MONSTER, monList[0].gid);
+
+			if (target && target.IsAttackable()) {
+				result = CLToon.Attack(target);
+
+				switch (result) {
+					case 1:
+						monList.shift();
+						ignoreList.push(target.gid);
+						break;
+					case 2:
+					case 3:
+						if(!gidAttack[target.gid]) {
+							gidAttack[target.gid] = 0;
+						}
+
+						gidAttack[target.gid] += 1;
+
+						if (gidAttack[target.gid] > CLConfig.LowMaxAttacks) {
+							monList.shift();
+							ignoreList.push(target.gid);
+						}
+
+						attackcount += 1;
+						//if (target.mode === 0 || target.mode === 12) {
+							//CLSI_FastPick();
+						//}
+						break;
+					default:
+						return false;
+				}
+			} else {
+				monList.shift();
+				ignoreList.push(target.gid);
+			}
+		}
+
+		switch (me.classid) {
+			case NTC_CHAR_CLASS_PALADIN:
+				if (attackcount > 2 && (parseInt(me.hp * 100/ me.hpmax) < CLConfig.UseRedemptionHP || parseInt(me.mp * 100 / me.mpmax) < CLConfig.UseRedemptionMP)) {
+					if (CLSkill.Put(124, NTC_HAND_RIGHT)) {
+						Delay(1000);
+					}
+				}
+				break;
+			case NTC_CHAR_CLASS_NECROMANCER:
+				CLToon.SkeletonArmy(CLConfig.SkeletonArmy);
+				CLToon.MageArmy(CLConfig.MageArmy);
+				CLToon.ReviveArmy(CLConfig.ReviveArmy);
+				break;
+			case NTC_CHAR_CLASS_SORCERESS:
+				if (me.GetState(30) === 0) {
+					CLSkill.Cast(58, NTC_HAND_RIGHT);
+				}
+				break;
+			case NTC_CHAR_CLASS_BARBARIAN:
+				if (attackcount > 0) {
+					if (CLConfig.UseFindItem && !this.CheckForCloseMonsters(10)) {
+						CLToon.FindItem(CLConfig.FindItemRange);
+					}
+				}
+				break;
+		}
+
+		//if (attackcount > 0) {
+			//CLSI_PickItems();
+		//}
+		//if (NTConfig_OpenChest) {
+			//OpenStashes(range);
+		//}
+
+		//if (CLT_CheckMerc()) {
+			//CLTMGR_VisitTown();
+		//}
+
+		//if (CLT_CheckPotionSafe()) {
+			//CLTMGR_VisitTown();
+		//}
+
+		//if (NTConfig_IdInField) {
+			//if (!CLT_CheckSpace(NTConfig_FreeSpaceXY[0], NTConfig_FreeSpaceXY[1])) {
+				//CLA_FieldID();
+			//}
+		//} 
+		//return true;
+	},
+
+	ClearLevel: function (pickitem, safelevel) {
+		var i, room, rooms, distance, minindex, mindistance;
+
+		room = GetRoom();
+
+		if (!room) { return false; }
+
+		if (pickitem === undefined) {
+			pickitem = true;
+		}
+
+		if (safelevel === undefined) {
+			safelevel = 2;
+		}
+
+		if ((CLConfig.CheckSelfSafe.length < 1) && (CLConfig.CheckMercSafe.length < 1)) {
+			safelevel = 0;
+		}
+
+		rooms = [];
+
+		do {
+			rooms.push([parseFloat(room.x * 5 + room.xsize * 5 / 2), parseFloat(room.y * 5 + room.ysize * 5 / 2)]);
+		} while (room.GetNext());
+
+		while (rooms.length > 0) {
+			mindistance = 100000;
+
+			for (i = 0; i < rooms.length; i += 1) {
+				distance = GetDistance(me.x, me.y, rooms[i][0], rooms[i][1]);
+
+				if (distance < mindistance) {
+					minindex = i;
+					mindistance = distance;
+				}
+			}
+
+			if (CLMove.To(me.areaid, rooms[minindex][0], rooms[minindex][1], 1, false, false)) {
+				//if (!this.ClearRoom(pickitem, safelevel)) {
+				if (!this.ClearPosition(35)) {
+					return false;
+				}
+
+				CLPrecast.Do(false);
+			}
+
+			rooms.splice(minindex, 1);
+		}
+
+		return true;
+	},
+
+	ClearRoom: function (pickitem, safelevel) {
+		var i, room, skiplist, target, result, gid_lastKnownHealth,
+			gid_goodattackcount, distance, mingid, mindistance, minshamangid, minshamandistance,
+			spectype = [0x0A, 0x01],
+			attackcount = 0;
+
+		if (CLConfig.ClearWeakerMobsFirst && CLConfig.SkipClearingWeakerAreas.indexOf(me.areaid) < 0) {
+			spectype = [0x10, 0x01, 0x04, 0x0A];
+		}	
+		
+		if (CLConfig.AttackSkill[1] < 0 || CLConfig.AttackSkill[3] < 0) {
+			return false;
+		}
+
+		room = me.GetRoom();
+
+		if (!room) {
+			return false;
+		}
+
+		if (pickitem === undefined) {
+			pickitem = false;
+		}
+
+		if (safelevel === undefined) {
+			safelevel = 0;
+		}
+		
+		if ((CLConfig.CheckSelfSafe.length < 1) && (CLConfig.CheckMercSafe.length < 1)) {
+			safelevel = 0;
+		}
+
+		for (i = 0; i < spectype.length; i += 1) {
+			skiplist = [];
+			gid_lastKnownHealth = [];
+			gid_goodattackcount = [];
+
+			while (attackcount < (i + 1) * 100) {
+				mindistance = 100000;
+				minshamandistance = 100000;
+
+				target = CLUnit.Find(NTC_UNIT_MONSTER);
+
+				if (target) {
+					do {
+						if (skiplist.indexOf(target.gid) < 0) {
+							if (target.IsAttackable() && (target.spectype & spectype[i])) {
+								if (room.UnitInRoom(target) && this.IsValidMonster(target)) {
+									if (MonstersToAttackFirst.indexOf(target.classid) > -1) {
+										distance = GetDistance(me, target);
+
+										if (distance < minshamandistance) {
+											minshamangid = target.gid;
+											minshamandistance = distance;
+										}
+									} else {
+										distance = GetDistance(me, target);
+
+										if (distance < mindistance) {
+											mingid = target.gid;
+											mindistance = distance;
+										}
+									}
+								}
+							} else {
+								skiplist.push(target.gid);
+							}
+						}
+					} while (target.GetNext());
+				}
+
+				if (minshamandistance < 100000) {
+					target = CLUnit.Find(NTC_UNIT_MONSTER, minshamangid);
+
+					if (target) {
+						result = CLToon.Attack(target, (attackcount % 30) === 0);
+
+						if (gid_lastKnownHealth[minshamangid] === undefined) {
+							gid_lastKnownHealth[minshamangid] = target.hp; 
+						} else { 
+							if (target.hp >= gid_lastKnownHealth[minshamangid]*0.98) {
+								if (gid_goodattackcount[minshamangid] === undefined) {
+									gid_goodattackcount[minshamangid] = 1; 
+									gid_lastKnownHealth[minshamangid] = target.hp; 
+								} else { 
+									gid_goodattackcount[minshamangid] += 1; 
+									gid_lastKnownHealth[minshamangid] = target.hp; 
+								}
+							}
+						}					
+						if (CLConfig.HighMaxAttacks || CLConfig.HighMaxAttackAreas.indexOf(me.areaid) !== -1) {
+							if (gid_goodattackcount[minshamangid] > CLConfig.HighMaxAttacks) {
+								skiplist.push(minshamangid);
+							}
+						} else if (!CLConfig.HighMaxAttacks || CLConfig.HighMaxAttackAreas.indexOf(me.areaid) === -1) {
+							if (gid_goodattackcount[minshamangid] > CLConfig.LowMaxAttacks) {
+								Print(COLOR_1 + "I can't hit him!!! -> skipped");
+								skiplist.push(minshamangid);
+							}
+						}
+
+						switch (result) {
+							case 1:
+								skiplist.push(minshamangid);
+								break;
+							case 2:
+							case 3:
+								//if (target.mode === 0 || target.mode === 12) {
+									//CLSI_FastPick();
+								//}
+								attackcount += 1;
+								SorcAttack += 1;
+								break;
+							default:
+								return false;
+						}
+					}
+				} else if (mindistance < 100000) {
+					target = CLUnit.Find(NTC_UNIT_MONSTER, mingid);
+
+					if (target) {
+						result = CLToon.Attack(target, (attackcount % 30) === 0);
+
+						if (gid_lastKnownHealth[mingid] === undefined) {
+							gid_lastKnownHealth[mingid] = target.hp; 
+						} else { 
+							if (target.hp >= gid_lastKnownHealth[mingid]*0.98) {
+								if (gid_goodattackcount[mingid] === undefined) {
+									gid_goodattackcount[mingid] = 1; 
+									gid_lastKnownHealth[mingid] = target.hp; 
+								} else { 
+									gid_goodattackcount[mingid] += 1; 
+									gid_lastKnownHealth[mingid] = target.hp; 
+								}
+							}
+						}
+
+						if (CLConfig.HighMaxAttacks || CLConfig.HighMaxAttackAreas.indexOf(me.areaid) !== -1) {
+							if (gid_goodattackcount[mingid] > CLConfig.HighMaxAttacks) {
+								skiplist.push(mingid);
+							}
+						} else if (!CLConfig.HighMaxAttacks || CLConfig.HighMaxAttackAreas.indexOf(me.areaid) === -1) {
+							if (gid_goodattackcount[mingid] > CLConfig.LowMaxAttacks) {
+								Print(COLOR_1 + "I can't hit him!!! -> skipped");
+								skiplist.push(mingid);
+							}
+						}
+
+						switch (result) {
+						case 1:
+							skiplist.push(mingid);
+							break;
+						case 2:
+						case 3:
+							//if (target.mode === 0 || target.mode === 12) {
+								//CLSI_FastPick();
+							//}
+							attackcount += 1;
+							SorcAttack += 1;
+							break;
+						default:
+							return false;
+						}
+					}
+				} else {
+					break;
+				}
+			}
+		}
+
+		if (me.classid === NTC_CHAR_CLASS_PALADIN) {
+			if (attackcount > 2 && (parseInt(me.hp * 100 / me.hpmax) < CLConfig.UseRedemptionHP || parseInt(me.mp * 100 / me.mpmax) < CLConfig.UseRedemptionMP)) {
+				if (CLSkill.Put(124, NTC_HAND_RIGHT)) {
+					CLCommon.PingDelay(1000);
+				}
+			}
+		} else if (me.classid === NTC_CHAR_CLASS_NECROMANCER) {
+			CLToon.SkeletonArmy(CLConfig.SkeletonArmy);
+			CLToon.MageArmy(CLConfig.MageArmy);
+			CLToon.ReviveArmy(CLConfig.ReviveArmy);
+		} else if (me.classid === NTC_CHAR_CLASS_BARBARIAN) {
+			if (CLConfig.UseFindItem && attackcount > 2) {
+				if (!this.CheckForCloseMonsters(10)) {
+					CLItem.Find(CLConfig.FindItemRange);
+				}
+			}
+		}
+
+		//if (CLConfig.OpenChest) {
+			//target = CLC_GetSpecialChest();
+
+			//if (target && room.UnitInRoom(target) && CLCommon.OpenChest(target)) {
+				//attackcount += 1;
+			//}
+
+			//SorcAttack += 1;
+		//}
+
+		//if (CLConfig.OpenChestsClearingArea && CLConfig.AreasToOpenChestClearing.indexOf(me.areaid) != -1) {
+			//CLC_OpenChestsInAreaNear(me.x, me.y, 20);
+		//}
+		
+		//if(NTConfig_IdInField){
+			//if (!CLT_CheckSpace(NTConfig_FreeSpaceXY[0], NTConfig_FreeSpaceXY[1])) { 
+				//CLItem.FieldID(); 
+			//} // id in field add
+		//}
+		
+		//if (pickitem && attackcount > 0) {
+			//CLSI_PickItems();
+		//}
+		
+		//if(NTConfig_IdInField){
+			//if (!CLT_CheckSpace(NTConfig_FreeSpaceXY[0], NTConfig_FreeSpaceXY[1])) { 
+				//CLA_FieldID(); 
+			//} // id in field add
+		//}
+
+		//if(CLTMGR_CheckCurse(NTConfig_CheckSelfSafe, NTConfig_CheckMercSafe, true)) {
+			//CLTMGR_VisitTown();
+		//} else if( CLTMGR_CheckSafe(NTConfig_CheckSelfSafe, NTConfig_CheckMercSafe, true)) {
+			//CLTMGR_VisitTown();
+		//}
+		return true;
+	},
+
+	IsValidMonster: function (monster) {
+		var classid, getTeleSkill;
+
+		if (monster.hp <= 0 || monster.mode === 0 || monster.mode === 12) {
+			return false;
+		}
+
+		classid = monster.classid;
+
+		if (((classid >= 110 && classid <= 113) || classid === 608) && monster.mode === 8) { // ignore flying scavengers
+			return false;
+		}
+
+		if (classid === 68 && monster.mode === 14) { // ignore burrowing maggots
+			return false;
+		}
+
+		if (classid >= 258 && classid <= 263 && monster.mode === 14) { // ignore submerged WaterWatchers
+			return false;
+		}
+
+		getTeleSkill = CLSkill.GetLevel(54);
+
+		if (getTeleSkill) {
+			if ((classid >= 432 && classid <= 435) || classid === 524 || classid === 525) { // ignore breakable walls (we can tele!)
+				return false;
+			}
+		}
+
+		if (monster.GetState(53) || monster.GetState(96)) {// Conversion, Revive
+			return false;
+		}
+
+		if (monster.name === GetLocaleString(3162) && GetDistance(me.x, me.y, monster.x, monster.y) < 20) {
+			if (!CheckCollision(me.areaid, monster.x, monster.y, 0) || !CheckCollision(me.areaid, monster.x, monster.y, 1) || !CheckCollision(me.areaid, monster.x, monster.y, 5)) {
+				return false;
+			}
+		}
+
+		if (CLConfig.SkipRegularMonsters) {
+			if (monster.spectype === 1 && me.areaid !== 131) {
+				return false;
+			}
+		}
+
+		if (me.classid === NTC_CHAR_CLASS_DRUID) {
+			if (!me.GetState(144)) {
+				CLSkill.Cast(250, NTC_HAND_RIGHT);
+			}
+
+			if (!me.GetState(151)) {
+				CLSkill.Cast(235, NTC_HAND_RIGHT);
+			}
+
+			if (!me.GetState(149)) {
+				CLSkill.Cast(226, NTC_HAND_RIGHT);
+			}
+
+		}
+		
+		/*if (CLConfig.AreasToNotSkipImmunes.indexOf(me.areaid) === -1) {
+			this.SkipImmuneBoss = false;
+			if (NTConfig_SkipSingle[0]) {
+				if (CLA_GetResistance(monster, NTA_DAMAGE_PHYSICAL) > 95) {
+					skippedImmuneBoss = true;
+					return false;
+				}
+			}
+			if (NTConfig_SkipSingle[1]) {
+				if (CLA_GetResistance(monster, NTA_DAMAGE_MAGIC) > 95) {
+					skippedImmuneBoss = true;
+					return false;
+				}
+			}
+			if (NTConfig_SkipSingle[2]) {
+				if (CLA_GetResistance(monster, NTA_DAMAGE_FIRE) > 95) {
+					skippedImmuneBoss = true;
+					return false;
+				}
+			}
+			if (NTConfig_SkipSingle[3]) {
+				if (CLA_GetResistance(monster, NTA_DAMAGE_LIGHTNING) > 95) {
+					skippedImmuneBoss = true;
+					return false;
+				}
+			}
+			if (NTConfig_SkipSingle[4]) {
+				if (CLA_GetResistance(monster, NTA_DAMAGE_COLD) > 95) {
+					skippedImmuneBoss = true;
+					return false;
+				}
+			}
+			if (NTConfig_SkipSingle[5]) {
+				if (CLA_GetResistance(monster, NTA_DAMAGE_POISON) > 95) {
+					skippedImmuneBoss = true;
+					return false;
+				}
+			}
+			if (NTConfig_SkipDual[0]) {
+				if (CLA_GetResistance(monster, NTA_DAMAGE_PHYSICAL) > 95 && CLA_GetResistance(monster, NTA_DAMAGE_MAGIC) > 95) {
+					skippedImmuneBoss = true;
+					return false;
+				}
+			}
+			if (NTConfig_SkipDual[1]) {
+				if (CLA_GetResistance(monster, NTA_DAMAGE_PHYSICAL) > 95 && CLA_GetResistance(monster, NTA_DAMAGE_FIRE) > 95) {
+					skippedImmuneBoss = true;
+					return false;
+				}
+			}
+			if (NTConfig_SkipDual[2]) {
+				if (CLA_GetResistance(monster, NTA_DAMAGE_PHYSICAL) > 95 && CLA_GetResistance(monster, NTA_DAMAGE_LIGHTNING) > 95) {
+					skippedImmuneBoss = true;
+					return false;
+				}
+			}
+			if (NTConfig_SkipDual[3]) {
+				if (CLA_GetResistance(monster, NTA_DAMAGE_PHYSICAL) > 95 && CLA_GetResistance(monster, NTA_DAMAGE_COLD) > 95) {
+					skippedImmuneBoss = true;
+					return false;
+				}
+			}
+			if (NTConfig_SkipDual[4]) {
+				if (CLA_GetResistance(monster, NTA_DAMAGE_PHYSICAL) > 95 && CLA_GetResistance(monster, NTA_DAMAGE_POISON) > 95) {
+					skippedImmuneBoss = true;
+					return false;
+				}
+			}
+			if (NTConfig_SkipDual[5]) {
+				if (CLA_GetResistance(monster, NTA_DAMAGE_MAGIC) > 95 && CLA_GetResistance(monster, NTA_DAMAGE_FIRE) > 95) {
+					skippedImmuneBoss = true;
+					return false;
+				}
+			}
+			if (NTConfig_SkipDual[6]) {
+				if (CLA_GetResistance(monster, NTA_DAMAGE_MAGIC) > 95 && CLA_GetResistance(monster, NTA_DAMAGE_LIGHTNING) > 95) {
+					skippedImmuneBoss = true;
+					return false;
+				}
+			}
+			if (NTConfig_SkipDual[7]) {
+				if (CLA_GetResistance(monster, NTA_DAMAGE_MAGIC) > 95 && CLA_GetResistance(monster, NTA_DAMAGE_COLD) > 95) {
+					skippedImmuneBoss = true;
+					return false;
+				}
+			}
+			if (NTConfig_SkipDual[8]) {
+				if (CLA_GetResistance(monster, NTA_DAMAGE_MAGIC) > 95 && CLA_GetResistance(monster, NTA_DAMAGE_POISON) > 95) {
+					skippedImmuneBoss = true;
+					return false;
+				}
+			}
+			if (NTConfig_SkipDual[9]) {
+				if (CLA_GetResistance(monster, NTA_DAMAGE_FIRE) > 95 && CLA_GetResistance(monster, NTA_DAMAGE_LIGHTNING) > 95) {
+					skippedImmuneBoss = true;
+					return false;
+				}
+			}
+			if (NTConfig_SkipDual[10]) {
+				if (CLA_GetResistance(monster, NTA_DAMAGE_FIRE) > 95 && CLA_GetResistance(monster, NTA_DAMAGE_COLD) > 95) {
+					skippedImmuneBoss = true;
+					return false;
+				}
+			}
+			if (NTConfig_SkipDual[11]) {
+				if (CLA_GetResistance(monster, NTA_DAMAGE_FIRE) > 95 && CLA_GetResistance(monster, NTA_DAMAGE_POISON) > 95) {
+					skippedImmuneBoss = true;
+					return false;
+				}
+			}
+			if (NTConfig_SkipDual[12]) {
+				if (CLA_GetResistance(monster, NTA_DAMAGE_LIGHTNING) > 95 && CLA_GetResistance(monster, NTA_DAMAGE_COLD) > 95) {
+					skippedImmuneBoss = true;
+					return false;
+				}
+			}
+			if (NTConfig_SkipDual[13]) {
+				if (CLA_GetResistance(monster, NTA_DAMAGE_LIGHTNING) > 95 && CLA_GetResistance(monster, NTA_DAMAGE_POISON) > 95) {
+					skippedImmuneBoss = true;
+					return false;
+				}
+			}
+			if (NTConfig_SkipDual[14]) {
+				if (CLA_GetResistance(monster, NTA_DAMAGE_COLD) > 95 && CLA_GetResistance(monster, NTA_DAMAGE_POISON) > 95) {
+					skippedImmuneBoss = true;
+					return false;
+				}
+			}
+		}*/
+		return true;
+	},
+
+	GetDamageType: function (skillid) {
+		if (skillid === 74 || skillid === 147 || skillid === 97) { // Corpse Explosion && Frenzy && Smite
+			return NTA_DAMAGE_PHYSICAL;
+		}
+
+		if (skillid === 111) { // Vengeance
+			return NTA_DAMAGE_NONE;
+		}
+
+		if (me.classid === NTC_CHAR_CLASS_PALADIN && (CLConfig.AttackSkill[1] === 112 && CLConfig.AttackSkill[5] > -1)) {
+			if (skillid === 101) { //holy bolt
+				return NTA_DAMAGE_NONE;
+			}
+		} else {
+			if (skillid === 112) { // Blessed Hammer
+				return NTA_DAMAGE_NONE;
+			}
+		}
+
+		switch (GetBaseStat("skills.txt", skillid, 233)) {
+			case "cold":
+				return NTA_DAMAGE_COLD;
+			case "fire":
+				return NTA_DAMAGE_FIRE;
+			case "ltng":
+				return NTA_DAMAGE_LIGHTNING;
+			case "mag":
+				return NTA_DAMAGE_MAGIC;
+			case "pois":
+				return NTA_DAMAGE_POISON;
+			case "stun":
+				return NTA_DAMAGE_NONE;
+			default:
+				if (GetBaseStat("skills.txt", skillid, 178) || GetBaseStat("skills.txt", skillid, 182)) { // aura or passive
+					return NTA_DAMAGE_NONE;
+				}
+		}
+		return NTA_DAMAGE_PHYSICAL;
+	},
+
+	GetResistance: function (enemy, type) {
+		switch (type) {
+			case NTA_DAMAGE_PHYSICAL:
+				return enemy.GetStat(36);
+			case NTA_DAMAGE_MAGIC:
+				return enemy.GetStat(37);
+			case NTA_DAMAGE_FIRE:
+				return enemy.GetStat(39);
+			case NTA_DAMAGE_LIGHTNING:
+				return enemy.GetStat(41);
+			case NTA_DAMAGE_COLD:
+				return enemy.GetStat(43);
+			case NTA_DAMAGE_POISON:
+				return enemy.GetStat(45);
+		}
+		return 0;
+	},
+
+	GetAttackType: function (target, startIndex, resistMaxPrimary, resistMaxSecondary, resistMaxTertiary) {
+		var i, currIndex,
+			holdMinResist = [999, startIndex],
+			resistArray = [999, 999, 999],
+			holdResistMax = [resistMaxPrimary, resistMaxSecondary, resistMaxTertiary];
+
+		for (i = 0, currIndex = startIndex; i < 3; i += 1, currIndex += 2) {
+			if (CLConfig.AttackSkill[currIndex] > -1) {
+				resistArray[i] = this.GetResistance(target, SkillDamage[currIndex]);
+				if (resistArray[i] < 100) {
+					switch (SkillDamage[currIndex]) {
+					case NTA_DAMAGE_PHYSICAL:	
+						resistArray[i] = target.GetStat(36);
+						break;
+					case NTA_DAMAGE_MAGIC:
+						resistArray[i] = target.GetStat(37) - me.GetStat(358);
+						break;
+					case NTA_DAMAGE_FIRE:
+						resistArray[i] = target.GetStat(39) - me.GetStat(333);
+						break;
+					case NTA_DAMAGE_LIGHTNING:
+						resistArray[i] = target.GetStat(41) - me.GetStat(334);
+						break;
+					case NTA_DAMAGE_COLD:
+						resistArray[i] = target.GetStat(43) - me.GetStat(335);
+						break;
+					case NTA_DAMAGE_POISON:
+						resistArray[i] = target.GetStat(45) - me.GetStat(336);
+						break;
+					}	
+					
+					if (resistArray[i] < -100) {
+						resistArray[i] = -100;
+					}
+				}					
+				if (resistArray[i] < holdResistMax[i]) { // Return index if attack is < our max resist requirement
+					return currIndex;
+				}
+			}
+
+			if (resistArray[i] < holdMinResist[0]) { // Store lowest resist attack
+				holdMinResist[0] = resistArray[i];
+				holdMinResist[1] = currIndex;
+			}
+
+			if (currIndex === 1 || currIndex === 2) { // Skip non boss primary if boss attack
+				currIndex += 2;
+			}
+		}
+
+
+		if (holdMinResist[0] >= 100) { // Every attack is immune
+			return startIndex;
+		} // At this point all available skills are greater than given max resist settings. Use lowest resist skill.
+
+		return holdMinResist[1];
+	},
+
+	CheckMercInfinity: function() {
+		var i, weapon, merc,
+			Merc_HaveInfinty = false;
+
+		merc = CLCommon.GetMerc();
+
+		if (!merc) {
+			return false;
+		}
+
+		if (merc && merc.hp > 0 && merc.mode !== 0 && merc.mode !== 12) {
+			weapon = merc.GetItems();
+
+			if (weapon) {
+				for (i = 0; i < weapon.length && !Merc_HaveInfinty; i += 1) {
+					if ((weapon[i].itemflag & 0x4000000) && weapon[i].itemprefix === 20566) {
+						Merc_HaveInfinty = true;
+						return true;
+					}
+				}
+			}
+		}
+
+		if (!Merc_HaveInfinty) {
+			return false;
+		}
+	},
+
+	CheckForCloseMonsters: function (range, target) {
+		var monstersClose, checkMonster;
+
+		if (range < 1 || arguments.length < 1) {
+			return false;
+		}
+
+		monstersClose = false;
+		checkMonster = GetUnits(NTC_UNIT_MONSTER);
+
+		if (checkMonster) {
+			do {
+				if(arguments.length > 1 && target === checkMonster){
+					continue;
+				}
+
+				if (checkMonster.IsAttackable() && GetDistance(me.x, me.y, checkMonster.x, checkMonster.y) < range && this.IsValidMonster(checkMonster)) {
+					monstersClose = true;
+					break;
+				}
+			} while (checkMonster.GetNext());
+		}
+		return monstersClose;
+	},
+
+	HaveArrows: function () {
+		var i, weapon,
+			haveAmmo = false;
+
+		weapon = me.GetItems();
+
+		if (weapon) {
+			for (i = 0; i < weapon.length; i += 1) {
+				if ((weapon[i].classid === 526 || weapon[i].classid === 528) && (weapon[i].itemloc === 4 || weapon[i].itemloc === 5)) {
+					if (weapon[i].GetStat(70) < 10) {
+						Print(COLOR_8 + "I'm low on " + weapon[i].name + ", I am going to town to buy more.");
+						//CLTMGR_VisitTown(true);
+					}
+
+					haveAmmo = true;
+					break;
+				}
+			}
+		}
+
+		if (!haveAmmo) {
+			Print(COLOR_8 + "I have no ammo, I am going to town to buy some.");
+			//CLTMGR_VisitTown(true);
+		}
+	}
+};

@@ -1,0 +1,25 @@
+CLPickit = {
+	CheckItem: function (item, checkonly) {
+		var resultArray = [];
+
+		if (checkonly === undefined) {
+			checkonly = true;
+		}
+
+		switch (item.quality) {
+			case 5:
+			case 8:
+				resultArray = CLItemParser.CheckItem(item);
+				break;
+			default:
+				resultArray = CLItemParser.CheckItem(item);
+				
+				if (CLCubing.CheckItem(item, resultArray[0])) {// || CLRW_CheckItem(item, checkonly)) {
+					resultArray[0] = 2;
+				}
+				break;
+		}
+
+		return resultArray;
+	}
+};

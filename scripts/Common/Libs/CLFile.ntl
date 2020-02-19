@@ -1,0 +1,103 @@
+var CLFile = {
+	ErrorFile: "Logs/" + me.realm + "/" + me.name + ".ntl",
+
+	Exists: function (path) {
+		var _file = FileOpen(path, 0);
+		if (!_file) {
+			return false;
+		}
+
+		if (_file) {
+			_file.Close();
+			return true;
+		}
+		return true;
+	},
+
+	OverWrite: function (path, msg) {
+		var _file;
+
+		_file = FileOpen(path, 1);
+			if (_file) {
+				_file.WriteLine(msg);
+			}
+		_file.Close();
+		return true;
+	},
+
+	Create: function (path) {
+		var _file, _fileCheck;
+
+		_fileCheck = FileOpen(path, 0);
+
+		if (_fileCheck) {
+			this.Log(this.ErrorFile, "Already have this file " + path);
+			_fileCheck.Close();
+			return false;
+		}
+
+		if (!_fileCheck) {
+			_file = FileOpen(path, 1);
+
+			_file.Close();
+		}
+		return true;
+	},
+
+	Copy: function (path, oldFile, newFile) {
+		var _old, _new;
+		_old = FileOpen(path + oldFile, 0);
+
+		if (arguments.length < 3) {
+			this.Log(this.ErrorFile, "Not enough arguments passed to carry out file copy function!");
+		}
+
+		if (!_old) {
+			this.Log(this.ErrorFile, "Failed to copy " + path + "! No original file found!");
+			return false;
+		}
+
+		if (_old) {
+			_new = FileOpen(path + newFile, 1);
+			while (!_old.eof) {
+				_new.WriteLine(_old.ReadLine());
+			}
+
+			_new.Close();
+			_old.Close();
+		}
+		return true;
+	},
+
+	Log: function (path, msg) {
+		var _file;
+
+		_file = FileOpen(path, 2);
+			if (_file) {
+				_file.WriteLine(msg);
+			}
+
+			_file.Close();
+		return;
+	},
+
+	Read: function (path) {
+		var _created,
+			_msg = "",
+			_fHandle = FileOpen(path, 0);
+
+		if (!_fHandle) { 
+			_fHandle = FileOpen(path, 1); 
+			_created = true;
+		}
+
+		if (_fHandle && !_created) {
+			while (!_fHandle.eof) {
+				_msg = _fHandle.ReadLine();
+			}
+		}
+
+		_fHandle.Close();
+		return _msg;
+	}
+};
